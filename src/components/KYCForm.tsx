@@ -48,12 +48,9 @@ const KYCForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 animate-fadeIn">
-        <h1 className="text-3xl font-bold text-center text-primary mb-8">
-          Identity Verification
-        </h1>
-        
+    <div className="w-full max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-8">KYC Verification</h1>
+      <div className="bg-white rounded-xl shadow-lg p-8">
         <ProgressSteps currentStep={step} />
 
         <div className="mt-8">
