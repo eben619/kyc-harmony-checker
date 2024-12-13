@@ -1,5 +1,5 @@
 import { User, Shield, Lock, Bell, DollarSign, Globe } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 const navigationItems = [
@@ -23,6 +24,13 @@ const navigationItems = [
 
 const AppSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { setOpenMobile } = useSidebar();
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setOpenMobile(false); // Close sidebar after navigation on mobile
+  };
 
   return (
     <Sidebar>
@@ -43,10 +51,13 @@ const AppSidebar = () => {
                     isActive={location.pathname === item.path}
                     tooltip={item.title}
                   >
-                    <a href={item.path} className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleNavigation(item.path)}
+                      className="flex w-full items-center gap-2"
+                    >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
-                    </a>
+                    </button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

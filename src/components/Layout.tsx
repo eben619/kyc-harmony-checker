@@ -1,4 +1,4 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AppSidebar from "./AppSidebar";
 
 interface LayoutProps {
@@ -10,7 +10,12 @@ const Layout = ({ children }: LayoutProps) => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6">
+          <div className="md:hidden mb-4">
+            <SidebarTrigger />
+          </div>
+          {children}
+        </main>
       </div>
     </SidebarProvider>
   );
