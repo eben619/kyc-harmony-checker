@@ -31,9 +31,9 @@ const Account = () => {
           .from("wallet_accounts")
           .select("wallet_address, created_at")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle(); // Changed from .single() to .maybeSingle()
 
-        if (error) {
+        if (error && error.code !== 'PGRST116') {
           console.error("Error fetching wallet account:", error);
           toast({
             title: "Error",
@@ -58,8 +58,13 @@ const Account = () => {
     getWalletAccount();
   }, [user, supabase, toast]);
 
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
+
   if (!user) {
-    navigate("/login");
     return null;
   }
 
