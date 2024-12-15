@@ -1,4 +1,8 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import AppSidebar from "./AppSidebar";
 
 interface LayoutProps {
@@ -6,13 +10,32 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 p-6">
-          <div className="md:hidden mb-4">
-            <SidebarTrigger />
+          <div className="flex justify-between items-center mb-6">
+            <div className="md:hidden">
+              <SidebarTrigger />
+            </div>
+            <div className="ml-auto">
+              <Button
+                variant="outline"
+                onClick={handleLogout}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            </div>
           </div>
           {children}
         </main>
