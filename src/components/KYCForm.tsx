@@ -13,6 +13,7 @@ export type KYCData = {
   address: string;
   documentImage: File | null;
   selfieImage: File | null;
+  biometricHash?: string;
 };
 
 const KYCForm = () => {
@@ -25,6 +26,7 @@ const KYCForm = () => {
     address: "",
     documentImage: null,
     selfieImage: null,
+    biometricHash: undefined,
   });
 
   const updateFormData = (data: Partial<KYCData>) => {
