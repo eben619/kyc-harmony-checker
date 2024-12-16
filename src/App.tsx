@@ -38,15 +38,67 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout>
-                    <Routes>
-                      <Route path="/" element={<Account />} />
-                      <Route path="/account" element={<Account />} />
-                      <Route path="/kyc" element={<KYCForm />} />
-                      <Route path="/privacy" element={<Privacy />} />
-                      <Route path="/notifications" element={<Notifications />} />
-                      <Route path="/tax" element={<Tax />} />
-                      <Route path="/language" element={<Language />} />
-                    </Routes>
+                    <KYCForm />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/kyc"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <KYCForm />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/account"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Account />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/privacy"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Privacy />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Notifications />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tax"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Tax />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/language"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Language />
                   </Layout>
                 </ProtectedRoute>
               }
