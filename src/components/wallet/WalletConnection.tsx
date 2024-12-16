@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Wallet, Fingerprint } from "lucide-react";
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
-import { WagmiConfig, useAccount, useConnect, useDisconnect } from 'wagmi';
+import { WagmiConfig, useAccount, useDisconnect } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
+import { QueryClient } from "@tanstack/react-query";
 
 // Initialize WalletConnect
 const projectId = 'b2f135e64d641e7415e333d1a66828e9';
@@ -17,7 +18,13 @@ const metadata = {
 };
 
 const chains = [mainnet];
-const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
+const wagmiConfig = defaultWagmiConfig({ 
+  chains, 
+  projectId, 
+  metadata,
+  queryClient: new QueryClient(),
+});
+
 createWeb3Modal({ wagmiConfig, projectId, chains });
 
 interface WalletConnectionProps {
