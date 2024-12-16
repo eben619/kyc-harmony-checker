@@ -4,6 +4,8 @@ import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Wallet, Fingerprint } from "lucide-react";
 
 const Account = () => {
   const supabase = useSupabaseClient();
@@ -11,6 +13,7 @@ const Account = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [connectingWallet, setConnectingWallet] = useState(false);
   const [userData, setUserData] = useState<{
     email: string | undefined;
     wallet_address: string | null;
@@ -31,7 +34,7 @@ const Account = () => {
           .from("wallet_accounts")
           .select("wallet_address, created_at")
           .eq("user_id", user.id)
-          .maybeSingle(); // Changed from .single() to .maybeSingle()
+          .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
           console.error("Error fetching wallet account:", error);
@@ -63,6 +66,89 @@ const Account = () => {
       navigate("/login");
     }
   }, [user, navigate]);
+
+  const connectWallet = async () => {
+    try {
+      setConnectingWallet(true);
+
+      // Check if MetaMask is installed
+      if (!window.ethereum) {
+        toast({
+          title: "MetaMask Required",
+          description: "Please install MetaMask to connect your wallet",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Request account access
+      const accounts = await window.ethereum.request({ 
+        method: 'eth_requestAccounts' 
+      });
+      
+      const walletAddress = accounts[0];
+
+      // Get biometric data using WebAuthn
+      const publicKeyCredentialCreationOptions = {
+        challenge: new Uint8Array(32),
+        rp: {
+          name: "Universal KYC",
+          id: window.location.hostname,
+        },
+        user: {
+          id: new Uint8Array(16),
+          name: user?.email || '',
+          displayName: user?.email || '',
+        },
+        pubKeyCredParams: [{alg: -7, type: "public-key"}],
+        authenticatorSelection: {
+          authenticatorAttachment: "platform",
+          userVerification: "required",
+        },
+        timeout: 60000,
+      };
+
+      const credential = await navigator.credentials.create({
+        publicKey: publicKeyCredentialCreationOptions
+      });
+
+      // Convert credential to string for storage
+      const biometricHash = btoa(JSON.stringify(credential));
+
+      // Store wallet address and biometric hash in Supabase
+      const { error } = await supabase
+        .from('wallet_accounts')
+        .upsert({
+          user_id: user?.id,
+          wallet_address: walletAddress,
+          biometric_hash: biometricHash,
+        });
+
+      if (error) throw error;
+
+      // Update local state
+      setUserData(prev => ({
+        ...prev,
+        wallet_address: walletAddress,
+        created_at: new Date().toISOString(),
+      }));
+
+      toast({
+        title: "Success",
+        description: "Wallet connected successfully!",
+      });
+
+    } catch (error) {
+      console.error('Error connecting wallet:', error);
+      toast({
+        title: "Error",
+        description: "Failed to connect wallet. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setConnectingWallet(false);
+    }
+  };
 
   if (!user) {
     return null;
@@ -99,11 +185,32 @@ const Account = () => {
               {loading ? (
                 <p className="text-muted-foreground">Loading...</p>
               ) : userData.wallet_address ? (
-                <p className="text-muted-foreground font-mono">
-                  {userData.wallet_address}
-                </p>
+                <>
+                  <p className="text-muted-foreground font-mono mb-2">
+                    {userData.wallet_address}
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={connectWallet}
+                    disabled={connectingWallet}
+                  >
+                    <Fingerprint className="h-4 w-4" />
+                    Verify Biometrics
+                  </Button>
+                </>
               ) : (
-                <p className="text-muted-foreground">No wallet connected</p>
+                <div className="space-y-2">
+                  <p className="text-muted-foreground">No wallet connected</p>
+                  <Button
+                    onClick={connectWallet}
+                    disabled={connectingWallet}
+                    className="gap-2"
+                  >
+                    <Wallet className="h-4 w-4" />
+                    {connectingWallet ? "Connecting..." : "Connect Wallet"}
+                  </Button>
+                </div>
               )}
             </div>
 
