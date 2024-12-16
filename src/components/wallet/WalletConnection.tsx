@@ -3,6 +3,22 @@ import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Wallet, Fingerprint } from "lucide-react";
+import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
+import { WagmiConfig, useAccount, useConnect, useDisconnect } from 'wagmi';
+import { mainnet } from 'wagmi/chains';
+
+// Initialize WalletConnect
+const projectId = 'b2f135e64d641e7415e333d1a66828e9';
+const metadata = {
+  name: 'Universal KYC',
+  description: 'Universal KYC Wallet Connection',
+  url: window.location.host,
+  icons: ['https://avatars.githubusercontent.com/u/37784886']
+};
+
+const chains = [mainnet];
+const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
+createWeb3Modal({ wagmiConfig, projectId, chains });
 
 interface WalletConnectionProps {
   walletData: {
@@ -12,30 +28,26 @@ interface WalletConnectionProps {
   onWalletUpdate: () => void;
 }
 
-const WalletConnection = ({ walletData, onWalletUpdate }: WalletConnectionProps) => {
+const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnectionProps) => {
   const supabase = useSupabaseClient();
   const user = useUser();
   const { toast } = useToast();
   const [connectingWallet, setConnectingWallet] = useState(false);
+  const { address } = useAccount();
+  const { disconnectAsync } = useDisconnect();
 
   const connectWallet = async () => {
     try {
       setConnectingWallet(true);
 
-      if (!window.ethereum) {
+      if (!address) {
         toast({
-          title: "MetaMask Required",
-          description: "Please install MetaMask to connect your wallet",
+          title: "Error",
+          description: "Please connect your wallet first using WalletConnect",
           variant: "destructive",
         });
         return;
       }
-
-      const accounts = await window.ethereum.request({ 
-        method: 'eth_requestAccounts' 
-      });
-      
-      const walletAddress = accounts[0];
 
       const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions = {
         challenge: new Uint8Array(32),
@@ -50,7 +62,7 @@ const WalletConnection = ({ walletData, onWalletUpdate }: WalletConnectionProps)
         },
         pubKeyCredParams: [{alg: -7, type: "public-key"}],
         authenticatorSelection: {
-          authenticatorAttachment: "platform" as AuthenticatorAttachment,
+          authenticatorAttachment: "platform",
           userVerification: "required",
         },
         timeout: 60000,
@@ -66,7 +78,7 @@ const WalletConnection = ({ walletData, onWalletUpdate }: WalletConnectionProps)
         .from('wallet_accounts')
         .upsert({
           user_id: user?.id,
-          wallet_address: walletAddress,
+          wallet_address: address,
           biometric_hash: biometricHash,
         });
 
@@ -95,13 +107,14 @@ const WalletConnection = ({ walletData, onWalletUpdate }: WalletConnectionProps)
     return (
       <div className="space-y-2">
         <p className="text-muted-foreground">No wallet connected</p>
+        <w3m-button />
         <Button
           onClick={connectWallet}
-          disabled={connectingWallet}
+          disabled={connectingWallet || !address}
           className="gap-2"
         >
           <Wallet className="h-4 w-4" />
-          {connectingWallet ? "Connecting..." : "Connect Wallet"}
+          {connectingWallet ? "Connecting..." : "Bind Wallet"}
         </Button>
       </div>
     );
@@ -124,5 +137,12 @@ const WalletConnection = ({ walletData, onWalletUpdate }: WalletConnectionProps)
     </>
   );
 };
+
+// Wrap the component with WagmiConfig
+const WalletConnection = (props: WalletConnectionProps) => (
+  <WagmiConfig config={wagmiConfig}>
+    <WalletConnectionButton {...props} />
+  </WagmiConfig>
+);
 
 export default WalletConnection;
