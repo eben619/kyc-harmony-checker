@@ -10,6 +10,9 @@ export type KYCData = {
   lastName: string;
   dateOfBirth: string;
   address: string;
+  documentImage?: File;
+  selfieImage?: File;
+  biometricHash?: string;
   biometricData: {
     faceImage: string | null;
     fingerprintHash: string | null;

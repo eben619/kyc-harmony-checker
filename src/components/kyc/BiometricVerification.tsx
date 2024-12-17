@@ -23,7 +23,6 @@ const BiometricVerification = ({
 
   const handleFaceCapture = () => {
     setIsCapturing(true);
-    // Simulated capture for UI demo
     setTimeout(() => {
       updateFormData({
         biometricData: {
@@ -37,7 +36,6 @@ const BiometricVerification = ({
 
   const handleFingerprintCapture = () => {
     setIsCapturing(true);
-    // Simulated capture for UI demo
     setTimeout(() => {
       updateFormData({
         biometricData: {
@@ -51,7 +49,6 @@ const BiometricVerification = ({
 
   const handleLivePhotoCapture = () => {
     setIsCapturing(true);
-    // Simulated capture for UI demo
     setTimeout(() => {
       updateFormData({
         biometricData: {
@@ -100,7 +97,7 @@ const BiometricVerification = ({
               </p>
               <Button
                 onClick={handleFaceCapture}
-                disabled={isCapturing || formData.biometricData.faceImage}
+                disabled={isCapturing || !!formData.biometricData.faceImage}
                 className="w-full"
               >
                 {formData.biometricData.faceImage ? "Captured" : "Start Face Scan"}
@@ -125,7 +122,7 @@ const BiometricVerification = ({
               </p>
               <Button
                 onClick={handleFingerprintCapture}
-                disabled={isCapturing || formData.biometricData.fingerprintHash}
+                disabled={isCapturing || !!formData.biometricData.fingerprintHash}
                 className="w-full"
               >
                 {formData.biometricData.fingerprintHash ? "Captured" : "Capture Fingerprint"}
@@ -150,7 +147,7 @@ const BiometricVerification = ({
               </p>
               <Button
                 onClick={handleLivePhotoCapture}
-                disabled={isCapturing || formData.biometricData.livePhotoImage}
+                disabled={isCapturing || !!formData.biometricData.livePhotoImage}
                 className="w-full"
               >
                 {formData.biometricData.livePhotoImage ? "Captured" : "Take Live Photo"}
