@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { KYCData } from "../KYCForm";
 
 interface PersonalInfoProps {
@@ -58,6 +59,35 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
             value={formData.address}
             onChange={(e) => updateFormData({ address: e.target.value })}
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="country">Country</Label>
+            <Select
+              value={formData.country}
+              onValueChange={(value) => updateFormData({ country: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select country" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="us">United States</SelectItem>
+                <SelectItem value="uk">United Kingdom</SelectItem>
+                <SelectItem value="ca">Canada</SelectItem>
+                <SelectItem value="au">Australia</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="zipCode">Zip Code</Label>
+            <Input
+              id="zipCode"
+              required
+              value={formData.zipCode}
+              onChange={(e) => updateFormData({ zipCode: e.target.value })}
+            />
+          </div>
         </div>
       </div>
 

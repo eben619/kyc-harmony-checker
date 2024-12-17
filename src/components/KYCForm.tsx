@@ -10,6 +10,8 @@ export type KYCData = {
   lastName: string;
   dateOfBirth: string;
   address: string;
+  country: string;
+  zipCode: string;
   documentImage?: File;
   selfieImage?: File;
   biometricHash?: string;
@@ -28,6 +30,8 @@ const KYCForm = () => {
     lastName: "",
     dateOfBirth: "",
     address: "",
+    country: "",
+    zipCode: "",
     biometricData: {
       faceImage: null,
       fingerprintHash: null,
