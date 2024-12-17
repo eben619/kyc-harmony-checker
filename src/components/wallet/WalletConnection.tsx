@@ -6,6 +6,7 @@ import { Wallet, Fingerprint } from "lucide-react";
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
 import { WagmiConfig, useAccount, useDisconnect } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
+import { type Config } from 'wagmi'; // Add this import
 
 // Initialize WalletConnect
 const projectId = 'b2f135e64d641e7415e333d1a66828e9';

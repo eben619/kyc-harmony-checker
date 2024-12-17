@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import PersonalInfo from "./kyc/PersonalInfo";
-import DocumentUpload from "./kyc/DocumentUpload";
-import SelfieUpload from "./kyc/SelfieUpload";
+import BiometricVerification from "./kyc/BiometricVerification";
 import Review from "./kyc/Review";
 import ProgressSteps from "./kyc/ProgressSteps";
 
@@ -11,9 +10,11 @@ export type KYCData = {
   lastName: string;
   dateOfBirth: string;
   address: string;
-  documentImage: File | null;
-  selfieImage: File | null;
-  biometricHash?: string;
+  biometricData: {
+    faceImage: string | null;
+    fingerprintHash: string | null;
+    livePhotoImage: string | null;
+  };
 };
 
 const KYCForm = () => {
@@ -24,9 +25,11 @@ const KYCForm = () => {
     lastName: "",
     dateOfBirth: "",
     address: "",
-    documentImage: null,
-    selfieImage: null,
-    biometricHash: undefined,
+    biometricData: {
+      faceImage: null,
+      fingerprintHash: null,
+      livePhotoImage: null,
+    },
   });
 
   const updateFormData = (data: Partial<KYCData>) => {
@@ -60,7 +63,7 @@ const KYCForm = () => {
             <PersonalInfo formData={formData} updateFormData={updateFormData} onNext={nextStep} />
           )}
           {step === 2 && (
-            <DocumentUpload
+            <BiometricVerification
               formData={formData}
               updateFormData={updateFormData}
               onNext={nextStep}
@@ -68,14 +71,6 @@ const KYCForm = () => {
             />
           )}
           {step === 3 && (
-            <SelfieUpload
-              formData={formData}
-              updateFormData={updateFormData}
-              onNext={nextStep}
-              onPrev={prevStep}
-            />
-          )}
-          {step === 4 && (
             <Review
               formData={formData}
               onSubmit={handleSubmit}
