@@ -90,7 +90,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
                   <CommandInput placeholder="Search country..." />
                   <CommandEmpty>No country found.</CommandEmpty>
                   <CommandGroup className="max-h-[300px] overflow-y-auto">
-                    {(countries || []).map((country) => (
+                    {countries.map((country) => (
                       <CommandItem
                         key={country.code}
                         value={country.name}
