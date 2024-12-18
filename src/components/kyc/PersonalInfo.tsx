@@ -17,9 +17,17 @@ interface PersonalInfoProps {
 
 const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) => {
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.country) {
+      setError("Please select a country.");
+      return;
+    }
+
+    setError("");
     onNext();
   };
 
@@ -79,7 +87,10 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
                   variant="outline"
                   role="combobox"
                   aria-expanded={open}
-                  className="w-full justify-between"
+                  className={cn(
+                    "w-full justify-between",
+                    !formData.country && "text-muted-foreground"
+                  )}
                 >
                   {selectedCountry ? selectedCountry.name : "Select country..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -112,6 +123,9 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
                 </Command>
               </PopoverContent>
             </Popover>
+            {error && (
+              <p className="text-red-500 text-sm mt-1">{error}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="zipCode">Zip Code</Label>
