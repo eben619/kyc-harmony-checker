@@ -21,9 +21,9 @@ const wagmiConfig = defaultWagmiConfig({
   chains, 
   projectId, 
   metadata
-});
+}) as any; // Type assertion to resolve the type error
 
-createWeb3Modal({ wagmiConfig: wagmiConfig as any, projectId, chains });
+createWeb3Modal({ wagmiConfig, projectId, chains });
 
 interface WalletConnectionProps {
   walletData: {
