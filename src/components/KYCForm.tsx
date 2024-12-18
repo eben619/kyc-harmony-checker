@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import PersonalInfo from "./kyc/PersonalInfo";
 import BiometricVerification from "./kyc/BiometricVerification";
+import DocumentUpload from "./kyc/DocumentUpload";
 import Review from "./kyc/Review";
 import ProgressSteps from "./kyc/ProgressSteps";
 
@@ -66,14 +67,14 @@ const KYCForm = () => {
     <div className="w-full max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-8">KYC Verification</h1>
       <div className="bg-white rounded-xl shadow-lg p-8">
-        <ProgressSteps currentStep={step} />
+        <ProgressSteps currentStep={step} totalSteps={4} />
 
         <div className="mt-8">
           {step === 1 && (
             <PersonalInfo formData={formData} updateFormData={updateFormData} onNext={nextStep} />
           )}
           {step === 2 && (
-            <BiometricVerification
+            <DocumentUpload
               formData={formData}
               updateFormData={updateFormData}
               onNext={nextStep}
@@ -81,6 +82,14 @@ const KYCForm = () => {
             />
           )}
           {step === 3 && (
+            <BiometricVerification
+              formData={formData}
+              updateFormData={updateFormData}
+              onNext={nextStep}
+              onPrev={prevStep}
+            />
+          )}
+          {step === 4 && (
             <Review
               formData={formData}
               onSubmit={handleSubmit}
