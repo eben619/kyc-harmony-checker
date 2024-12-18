@@ -8,7 +8,7 @@ const ProgressSteps = ({ currentStep, totalSteps }: ProgressStepsProps) => {
     "Personal Info",
     "Document Upload",
     "Biometric Verification",
-    "Review",
+    "Submit & Review",
   ];
 
   return (
