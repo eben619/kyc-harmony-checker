@@ -65,7 +65,8 @@ const KYCForm = () => {
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-8">KYC Verification</h1>
+      <h1 className="text-2xl font-bold mb-8 text-center">KYC Verification</h1>
+      <div><p className="font-bold text-center">Please make sure the information provided matches that on your ID.</p></div>
       <div className="bg-white rounded-xl shadow-lg p-8">
         <ProgressSteps currentStep={step} totalSteps={4} />
 
