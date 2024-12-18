@@ -38,17 +38,7 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout>
-                    <KYCForm />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/kyc"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <KYCForm />
+                    <Account />
                   </Layout>
                 </ProtectedRoute>
               }
@@ -59,6 +49,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <Account />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/kyc"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <KYCForm />
                   </Layout>
                 </ProtectedRoute>
               }
