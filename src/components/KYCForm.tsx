@@ -12,7 +12,10 @@ export type KYCData = {
   address: string;
   country: string;
   zipCode: string;
+  documentType?: string;
   documentImage?: File;
+  documentFrontImage?: File;
+  documentBackImage?: File;
   selfieImage?: File;
   biometricHash?: string;
   biometricData: {

@@ -1,8 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
 import { KYCData } from "../KYCForm";
+import countries from "../../data/countries";
 
 interface PersonalInfoProps {
   formData: KYCData;
@@ -11,6 +16,8 @@ interface PersonalInfoProps {
 }
 
 const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) => {
+  const [open, setOpen] = useState(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onNext();
@@ -63,21 +70,48 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="country">Country</Label>
-            <Select
-              value={formData.country}
-              onValueChange={(value) => updateFormData({ country: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select country" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="us">United States</SelectItem>
-                <SelectItem value="uk">United Kingdom</SelectItem>
-                <SelectItem value="ca">Canada</SelectItem>
-                <SelectItem value="au">Australia</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Country</Label>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  className="w-full justify-between"
+                >
+                  {formData.country
+                    ? countries.find((country) => country.code === formData.country)?.name
+                    : "Select country..."}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0">
+                <Command>
+                  <CommandInput placeholder="Search country..." />
+                  <CommandEmpty>No country found.</CommandEmpty>
+                  <CommandGroup className="max-h-[300px] overflow-y-auto">
+                    {countries.map((country) => (
+                      <CommandItem
+                        key={country.code}
+                        value={country.name}
+                        onSelect={() => {
+                          updateFormData({ country: country.code });
+                          setOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            formData.country === country.code ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {country.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="space-y-2">
             <Label htmlFor="zipCode">Zip Code</Label>

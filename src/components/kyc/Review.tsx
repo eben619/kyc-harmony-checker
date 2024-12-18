@@ -35,14 +35,39 @@ const Review = ({ formData, onSubmit, onPrev }: ReviewProps) => {
             <p>{formData.address}</p>
           </div>
 
-          <div>
-            <h3 className="font-medium text-gray-600">ID Document</h3>
-            <p>{formData.documentImage?.name}</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="font-medium text-gray-600">Country</h3>
+              <p>{formData.country}</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-600">Zip Code</h3>
+              <p>{formData.zipCode}</p>
+            </div>
           </div>
 
           <div>
-            <h3 className="font-medium text-gray-600">Selfie</h3>
-            <p>{formData.selfieImage?.name}</p>
+            <h3 className="font-medium text-gray-600">Document Type</h3>
+            <p>{formData.documentType}</p>
+          </div>
+
+          <div>
+            <h3 className="font-medium text-gray-600">Document Images</h3>
+            {formData.documentType === 'passport' ? (
+              <p>{formData.documentImage?.name}</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <p>Front: {formData.documentFrontImage?.name}</p>
+                <p>Back: {formData.documentBackImage?.name}</p>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h3 className="font-medium text-gray-600">Biometric Data</h3>
+            <p>Face Verification: {formData.biometricData.faceImage ? "Completed" : "Not completed"}</p>
+            <p>Fingerprint: {formData.biometricData.fingerprintHash ? "Completed" : "Not completed"}</p>
+            <p>Live Photo: {formData.biometricData.livePhotoImage ? "Completed" : "Not completed"}</p>
           </div>
         </div>
       </div>
