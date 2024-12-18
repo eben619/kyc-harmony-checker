@@ -1,7 +1,6 @@
-import KYCForm from "@/components/KYCForm";
-
+import Account from "./Account";
 const Index = () => {
-  return <KYCForm />;
+  return < Account/>;
 };
 
 export default Index;
