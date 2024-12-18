@@ -93,7 +93,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
                     {countries.map((country) => (
                       <CommandItem
                         key={country.code}
-                        value={country.name}
+                        value={country.name.toLowerCase()}
                         onSelect={() => {
                           updateFormData({ country: country.code });
                           setOpen(false);
