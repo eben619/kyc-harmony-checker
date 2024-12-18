@@ -4,9 +4,9 @@ import { Label } from "@/components/ui/label";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { KYCData } from "../KYCForm";
+import { cn } from "@/lib/utils";
 import countries from "../../data/countries";
 
 interface PersonalInfoProps {
@@ -22,6 +22,8 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
     e.preventDefault();
     onNext();
   };
+
+  const selectedCountry = countries.find((country) => country.code === formData.country);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 animate-fadeIn">
@@ -79,9 +81,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
                   aria-expanded={open}
                   className="w-full justify-between"
                 >
-                  {formData.country
-                    ? countries.find((country) => country.code === formData.country)?.name
-                    : "Select country..."}
+                  {selectedCountry ? selectedCountry.name : "Select country..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -93,7 +93,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
                     {countries.map((country) => (
                       <CommandItem
                         key={country.code}
-                        value={country.name.toLowerCase()}
+                        value={country.name}
                         onSelect={() => {
                           updateFormData({ country: country.code });
                           setOpen(false);
