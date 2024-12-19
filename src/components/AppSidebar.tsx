@@ -36,7 +36,11 @@ const AppSidebar = () => {
     <Sidebar>
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-primary"></div>
+          <img 
+            src="/lovable-uploads/dc77b3f0-99e1-4d66-bb4b-d4f491673715.png" 
+            alt="Universal KYC Logo" 
+            className="h-12 w-12"
+          />
           <h1 className="text-2xl font-bold">Universal KYC</h1>
         </div>
       </SidebarHeader>
