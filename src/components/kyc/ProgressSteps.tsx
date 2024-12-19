@@ -5,7 +5,7 @@ interface ProgressStepsProps {
 
 const ProgressSteps = ({ currentStep, totalSteps }: ProgressStepsProps) => {
   const steps = [
-    "Personal Info",
+    "Personal Information",
     "Document Upload",
     "Biometric Verification",
     "Submit & Review",
