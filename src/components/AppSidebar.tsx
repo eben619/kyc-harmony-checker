@@ -5,14 +5,13 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import UserProfile from "./user/UserProfile";
-import { useUser } from "@supabase/auth-helpers-react";
 
 const navigationItems = [
   { title: "Account", icon: User, path: "/account" },
@@ -27,7 +26,6 @@ const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { setOpenMobile } = useSidebar();
-  const user = useUser();
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -38,7 +36,8 @@ const AppSidebar = () => {
     <Sidebar>
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-3">
-          {user && <UserProfile user={user} />}
+          <div className="h-10 w-10 rounded-full bg-primary"></div>
+          <h1 className="text-2xl font-bold">Universal KYC</h1>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -46,18 +45,18 @@ const AppSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
-                <SidebarMenuItem key={item.title} className="py-2">
+                <SidebarMenuItem key={item.title} className="py-1">
                   <SidebarMenuButton
                     asChild
                     isActive={location.pathname === item.path}
                     tooltip={item.title}
-                    className="h-14 text-lg"
+                    className="h-12 text-base"
                   >
                     <button
                       onClick={() => handleNavigation(item.path)}
-                      className="flex w-full items-center gap-4"
+                      className="flex w-full items-center gap-3"
                     >
-                      <item.icon className="h-6 w-6" />
+                      <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>
                     </button>
                   </SidebarMenuButton>

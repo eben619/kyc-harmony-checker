@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { User } from "@supabase/auth-helpers-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -57,9 +58,9 @@ const UserProfile = ({ user }: UserProfileProps) => {
   };
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-row items-center gap-4">
       <div className="relative group">
-        <Avatar className="h-16 w-16">
+        <Avatar className="h-20 w-20">
           <AvatarImage src={avatarUrl || undefined} />
           <AvatarFallback className="text-lg">
             {user?.email?.charAt(0).toUpperCase() || "U"}
@@ -69,7 +70,7 @@ const UserProfile = ({ user }: UserProfileProps) => {
           htmlFor="avatar-upload"
           className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
         >
-          <Upload className="h-5 w-5 text-white" />
+          <Upload className="h-6 w-6 text-white" />
         </label>
         <input
           id="avatar-upload"
@@ -79,8 +80,11 @@ const UserProfile = ({ user }: UserProfileProps) => {
           className="hidden"
         />
       </div>
-      <div className="text-center">
-        <h2 className="text-lg font-semibold truncate max-w-[200px]">{user?.email}</h2>
+      <div>
+        <h2 className="text-xl font-semibold">{user?.email}</h2>
+        <p className="text-sm text-muted-foreground">
+          Member since {new Date(user?.created_at || "").toLocaleDateString()}
+        </p>
       </div>
     </div>
   );
