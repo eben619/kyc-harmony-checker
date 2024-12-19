@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { User } from "@supabase/auth-helpers-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -21,12 +20,14 @@ const UserProfile = ({ user }: UserProfileProps) => {
     if (!file) return;
 
     try {
-      // Upload the file to Supabase Storage
+      // Upload the file to Supabase Storage in a user-specific folder
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
+      const fileName = `${user.id}/${Math.random()}.${fileExt}`;
+      const { error: uploadError, data } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          upsert: true // Enable upsert to replace existing files
+        });
 
       if (uploadError) throw uploadError;
 
@@ -51,7 +52,7 @@ const UserProfile = ({ user }: UserProfileProps) => {
       console.error('Error uploading avatar:', error);
       toast({
         title: "Error",
-        description: "Failed to update profile picture",
+        description: "Failed to update profile picture. Please try again.",
         variant: "destructive",
       });
     }
