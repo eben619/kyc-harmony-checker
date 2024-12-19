@@ -29,15 +29,15 @@ const AppSidebar = () => {
 
   const handleNavigation = (path: string) => {
     navigate(path);
-    setOpenMobile(false); // Close sidebar after navigation on mobile
+    setOpenMobile(false);
   };
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-primary"></div>
-          <h1 className="text-xl font-bold">Universal KYC</h1>
+      <SidebarHeader className="p-6">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-primary"></div>
+          <h1 className="text-2xl font-bold">Universal KYC</h1>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -45,17 +45,18 @@ const AppSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.title} className="py-1">
                   <SidebarMenuButton
                     asChild
                     isActive={location.pathname === item.path}
                     tooltip={item.title}
+                    className="h-12 text-base"
                   >
                     <button
                       onClick={() => handleNavigation(item.path)}
-                      className="flex w-full items-center gap-2"
+                      className="flex w-full items-center gap-3"
                     >
-                      <item.icon className="h-4 w-4" />
+                      <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>
                     </button>
                   </SidebarMenuButton>
