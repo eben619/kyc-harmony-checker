@@ -1,4 +1,4 @@
-import { User, Shield, Lock, Bell, DollarSign, Globe } from "lucide-react";
+import { User, Shield, Lock, Bell, DollarSign, BookOpen } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -16,10 +16,10 @@ import {
 const navigationItems = [
   { title: "Account", icon: User, path: "/account" },
   { title: "KYC Verification", icon: Shield, path: "/kyc" },
-  { title: "Privacy", icon: Lock, path: "/privacy" },
+  { title: "/Privacy", icon: Lock, path: "/privacy" },
   { title: "Notifications", icon: Bell, path: "/notifications" },
   { title: "Tax Information", icon: DollarSign, path: "/tax" },
-  { title: "Language", icon: Globe, path: "/language" },
+  { title: "FAQ / Terms", icon: BookOpen, path: "/language" },
 ];
 
 const AppSidebar = () => {
@@ -36,11 +36,13 @@ const AppSidebar = () => {
     <Sidebar>
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-3">
-          <img 
-            src="/lovable-uploads/dc77b3f0-99e1-4d66-bb4b-d4f491673715.png" 
-            alt="Universal KYC Logo" 
-            className="h-12 w-12"
-          />
+          <div className="h-12 w-12 overflow-hidden rounded-full">
+            <img 
+              src="/lovable-uploads/dc77b3f0-99e1-4d66-bb4b-d4f491673715.png" 
+              alt="Universal KYC Logo" 
+              className="h-full w-full object-cover"
+            />
+          </div>
           <h1 className="text-2xl font-bold">Universal KYC</h1>
         </div>
       </SidebarHeader>
