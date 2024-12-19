@@ -57,7 +57,7 @@ const Language = () => {
   const fetchFAQs = async () => {
     const { data: translatedFaqs, error: translationError } = await supabase
       .from("faq_translations")
-      .select("question, answer")
+      .select("id, question, answer")
       .eq("language_code", selectedLanguage);
 
     if (translationError || !translatedFaqs?.length) {
@@ -122,18 +122,18 @@ const Language = () => {
 
       <Card className="p-6">
         <div className="space-y-4">
-          {faqs.map((faq, index) => (
+          {faqs.map((faq) => (
             <Collapsible
-              key={index}
-              open={openItems.includes(index)}
-              onOpenChange={() => toggleItem(index)}
+              key={faq.id}
+              open={openItems.includes(faq.id)}
+              onOpenChange={() => toggleItem(faq.id)}
               className="border rounded-lg p-4"
             >
               <CollapsibleTrigger className="flex w-full justify-between items-center text-left">
                 <span className="font-medium">{faq.question}</span>
                 <ChevronDown
                   className={`h-5 w-5 transition-transform ${
-                    openItems.includes(index) ? "transform rotate-180" : ""
+                    openItems.includes(faq.id) ? "transform rotate-180" : ""
                   }`}
                 />
               </CollapsibleTrigger>
