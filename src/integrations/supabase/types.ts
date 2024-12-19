@@ -9,6 +9,90 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      faq_translations: {
+        Row: {
+          answer: string
+          created_at: string
+          faq_id: number | null
+          id: number
+          language_code: string | null
+          question: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          faq_id?: number | null
+          id?: number
+          language_code?: string | null
+          question: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          faq_id?: number | null
+          id?: number
+          language_code?: string | null
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faq_translations_faq_id_fkey"
+            columns: ["faq_id"]
+            isOneToOne: false
+            referencedRelation: "faqs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faq_translations_language_code_fkey"
+            columns: ["language_code"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      faqs: {
+        Row: {
+          answer: string
+          created_at: string
+          id: number
+          question: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: number
+          question: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: number
+          question?: string
+        }
+        Relationships: []
+      }
+      languages: {
+        Row: {
+          code: string
+          created_at: string
+          id: number
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: number
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
       wallet_accounts: {
         Row: {
           biometric_hash: string | null
