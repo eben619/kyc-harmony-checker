@@ -22,7 +22,7 @@ const BiometricVerification = ({
 }: BiometricVerificationProps) => {
   const [activeTab, setActiveTab] = useState("face");
 
-  const handleBiometricUpdate = (data: Partial<BiometricData>) => {
+  const handleBiometricUpdate = (data: Partial<KYCData["biometricData"]>) => {
     updateFormData({
       biometricData: {
         ...formData.biometricData,
