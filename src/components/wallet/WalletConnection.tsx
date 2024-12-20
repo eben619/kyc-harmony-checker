@@ -11,7 +11,7 @@ import { mainnet } from 'wagmi/chains';
 const metadata = {
   name: 'Universal KYC',
   description: 'Universal KYC Wallet Connection',
-  url: window.location.host,
+  url: 'https://universalkyc.com', // Use a static URL instead of window.location
   icons: ['https://avatars.githubusercontent.com/u/37784886']
 };
 
@@ -22,12 +22,13 @@ const wagmiConfig = defaultWagmiConfig({
   chains, 
   projectId, 
   metadata
-}) as any; // Type assertion to resolve the type mismatch
+}) as any;
 
 createWeb3Modal({ 
   wagmiConfig, 
   projectId, 
-  chains 
+  chains,
+  defaultChain: mainnet
 });
 
 interface WalletConnectionProps {
