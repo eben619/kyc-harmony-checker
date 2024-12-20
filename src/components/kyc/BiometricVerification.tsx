@@ -6,6 +6,7 @@ import { Camera, Fingerprint, Scan, CheckCircle2 } from "lucide-react";
 import { KYCData } from "../KYCForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import "./types/image-capture.d.ts";
 
 interface BiometricVerificationProps {
   formData: KYCData;
