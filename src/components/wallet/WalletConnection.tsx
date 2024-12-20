@@ -17,19 +17,21 @@ const metadata = {
 
 const chains = [mainnet];
 
-// Function to initialize WalletConnect configuration
-const initializeWagmiConfig = async () => {
+// Function to initialize WagmiConfig
+const initializeWagmiConfig = async (supabaseClient: any) => {
   try {
-    const { data: { WALLET_CONNECT_PROJECT_ID }, error } = await supabase
+    const { data: { WALLET_CONNECT_PROJECT_ID }, error } = await supabaseClient
       .functions.invoke('get-wallet-connect-id');
     
     if (error) throw error;
     
-    return defaultWagmiConfig({ 
+    const wagmiConfig = defaultWagmiConfig({ 
       chains, 
       projectId: WALLET_CONNECT_PROJECT_ID, 
       metadata
     });
+
+    return wagmiConfig;
   } catch (error) {
     console.error('Error initializing WalletConnect:', error);
     return null;
@@ -156,17 +158,18 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
 // Wrap the component with WagmiConfig
 const WalletConnection = (props: WalletConnectionProps) => {
   const [wagmiConfig, setWagmiConfig] = useState(null);
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     const init = async () => {
-      const config = await initializeWagmiConfig();
+      const config = await initializeWagmiConfig(supabase);
       if (config) {
         setWagmiConfig(config);
         createWeb3Modal({ wagmiConfig: config, projectId: config.projectId, chains });
       }
     };
     init();
-  }, []);
+  }, [supabase]);
 
   if (!wagmiConfig) return null;
 
