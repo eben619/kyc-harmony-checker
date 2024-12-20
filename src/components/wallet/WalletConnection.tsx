@@ -22,7 +22,7 @@ const wagmiConfig = defaultWagmiConfig({
   chains, 
   projectId, 
   metadata
-});
+}) as any; // Type assertion to resolve the type mismatch
 
 createWeb3Modal({ 
   wagmiConfig, 
