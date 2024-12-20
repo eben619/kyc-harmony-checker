@@ -21,7 +21,11 @@ const chains = [mainnet];
 const initializeWagmiConfig = async (supabaseClient: any) => {
   try {
     const { data, error } = await supabaseClient
-      .functions.invoke('get-wallet-connect-id');
+      .functions.invoke('get-wallet-connect-id', {
+        headers: {
+          Authorization: `Bearer ${(await supabaseClient.auth.getSession()).data.session?.access_token}`
+        }
+      });
     
     if (error) throw error;
 
