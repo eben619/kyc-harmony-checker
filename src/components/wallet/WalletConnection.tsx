@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -8,7 +8,6 @@ import { WagmiConfig, useAccount, useDisconnect } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
 
 // Initialize WalletConnect
-const projectId = 'b2f135e64d641e7415e333d1a66828e9';
 const metadata = {
   name: 'Universal KYC',
   description: 'Universal KYC Wallet Connection',
@@ -17,13 +16,25 @@ const metadata = {
 };
 
 const chains = [mainnet];
-const wagmiConfig = defaultWagmiConfig({ 
-  chains, 
-  projectId, 
-  metadata
-}) as any; // Type assertion to resolve the type error
 
-createWeb3Modal({ wagmiConfig, projectId, chains });
+// Function to initialize WalletConnect configuration
+const initializeWagmiConfig = async () => {
+  try {
+    const { data: { WALLET_CONNECT_PROJECT_ID }, error } = await supabase
+      .functions.invoke('get-wallet-connect-id');
+    
+    if (error) throw error;
+    
+    return defaultWagmiConfig({ 
+      chains, 
+      projectId: WALLET_CONNECT_PROJECT_ID, 
+      metadata
+    });
+  } catch (error) {
+    console.error('Error initializing WalletConnect:', error);
+    return null;
+  }
+};
 
 interface WalletConnectionProps {
   walletData: {
@@ -143,10 +154,27 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
 };
 
 // Wrap the component with WagmiConfig
-const WalletConnection = (props: WalletConnectionProps) => (
-  <WagmiConfig config={wagmiConfig}>
-    <WalletConnectionButton {...props} />
-  </WagmiConfig>
-);
+const WalletConnection = (props: WalletConnectionProps) => {
+  const [wagmiConfig, setWagmiConfig] = useState(null);
+
+  useEffect(() => {
+    const init = async () => {
+      const config = await initializeWagmiConfig();
+      if (config) {
+        setWagmiConfig(config);
+        createWeb3Modal({ wagmiConfig: config, projectId: config.projectId, chains });
+      }
+    };
+    init();
+  }, []);
+
+  if (!wagmiConfig) return null;
+
+  return (
+    <WagmiConfig config={wagmiConfig}>
+      <WalletConnectionButton {...props} />
+    </WagmiConfig>
+  );
+};
 
 export default WalletConnection;
