@@ -111,7 +111,6 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
   if (!walletData?.wallet_address) {
     return (
       <div className="space-y-2">
-        <p className="text-muted-foreground">No wallet connected</p>
         <w3m-button />
         <Button
           onClick={connectWallet}
