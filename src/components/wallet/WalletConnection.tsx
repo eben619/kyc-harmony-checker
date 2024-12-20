@@ -16,34 +16,19 @@ const metadata = {
 };
 
 const chains = [mainnet];
+const projectId = "2aedf2f79606aa6c4c59f08d88d3e4a2";
 
-// Function to initialize WagmiConfig
-const initializeWagmiConfig = async (supabaseClient: any) => {
-  try {
-    const { data, error } = await supabaseClient
-      .functions.invoke('get-wallet-connect-id', {
-        headers: {
-          Authorization: `Bearer ${(await supabaseClient.auth.getSession()).data.session?.access_token}`
-        }
-      });
-    
-    if (error) throw error;
+const wagmiConfig = defaultWagmiConfig({ 
+  chains, 
+  projectId, 
+  metadata
+});
 
-    const projectId = data?.WALLET_CONNECT_PROJECT_ID;
-    if (!projectId) throw new Error('No project ID found');
-    
-    const wagmiConfig = defaultWagmiConfig({ 
-      chains, 
-      projectId, 
-      metadata
-    });
-
-    return { wagmiConfig, projectId };
-  } catch (error) {
-    console.error('Error initializing WalletConnect:', error);
-    return null;
-  }
-};
+createWeb3Modal({ 
+  wagmiConfig, 
+  projectId, 
+  chains 
+});
 
 interface WalletConnectionProps {
   walletData: {
@@ -164,28 +149,6 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
 
 // Wrap the component with WagmiConfig
 const WalletConnection = (props: WalletConnectionProps) => {
-  const [wagmiConfig, setWagmiConfig] = useState<any>(null);
-  const [projectId, setProjectId] = useState<string | null>(null);
-  const supabase = useSupabaseClient();
-
-  useEffect(() => {
-    const init = async () => {
-      const config = await initializeWagmiConfig(supabase);
-      if (config) {
-        setWagmiConfig(config.wagmiConfig);
-        setProjectId(config.projectId);
-        createWeb3Modal({ 
-          wagmiConfig: config.wagmiConfig, 
-          projectId: config.projectId, 
-          chains 
-        });
-      }
-    };
-    init();
-  }, [supabase]);
-
-  if (!wagmiConfig || !projectId) return null;
-
   return (
     <WagmiConfig config={wagmiConfig}>
       <WalletConnectionButton {...props} />
