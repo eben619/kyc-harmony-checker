@@ -11,24 +11,26 @@ import { mainnet } from 'wagmi/chains';
 const metadata = {
   name: 'Universal KYC',
   description: 'Universal KYC Wallet Connection',
-  url: 'https://universalkyc.com', // Use a static URL instead of window.location
+  url: 'https://universalkyc.com',
   icons: ['https://avatars.githubusercontent.com/u/37784886']
 };
 
 const chains = [mainnet];
-const projectId = "2aedf2f79606aa6c4c59f08d88d3e4a2";
+const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || "2aedf2f79606aa6c4c59f08d88d3e4a2";
 
 const wagmiConfig = defaultWagmiConfig({ 
   chains, 
   projectId, 
-  metadata
+  metadata,
+  ssr: true // Add SSR flag to prevent URL cloning issues
 }) as any;
 
 createWeb3Modal({ 
   wagmiConfig, 
   projectId, 
   chains,
-  defaultChain: mainnet
+  defaultChain: mainnet,
+  themeMode: 'light'
 });
 
 interface WalletConnectionProps {
