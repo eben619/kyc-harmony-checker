@@ -16,7 +16,7 @@ import {
 const navigationItems = [
   { title: "Account", icon: User, path: "/account" },
   { title: "KYC Verification", icon: Shield, path: "/kyc" },
-  { title: "/Privacy", icon: Lock, path: "/privacy" },
+  { title: "Proofs / Privacy", icon: Lock, path: "/privacy" },
   { title: "Notifications", icon: Bell, path: "/notifications" },
   { title: "Tax Information", icon: DollarSign, path: "/tax" },
   { title: "FAQ / Terms", icon: BookOpen, path: "/language" },
