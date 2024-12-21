@@ -16,13 +16,12 @@ const metadata = {
 };
 
 const chains = [mainnet];
-const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || "2aedf2f79606aa6c4c59f08d88d3e4a2";
+const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || "b2f135e64d641e7415e333d1a66828e9";
 
 const wagmiConfig = defaultWagmiConfig({ 
   chains, 
   projectId, 
   metadata,
-  ssr: true // Add SSR flag to prevent URL cloning issues
 }) as any;
 
 createWeb3Modal({ 
