@@ -105,7 +105,7 @@ const DocumentUpload = ({
         description: status === 'verified' 
           ? "Document information matches your submitted data."
           : "Some information might need manual review.",
-        variant: status === 'verified' ? "default" : "warning",
+        variant: status === 'verified' ? "default" : "destructive",
       });
 
     } catch (error) {
