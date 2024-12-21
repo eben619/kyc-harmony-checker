@@ -11,8 +11,8 @@ import { mainnet } from 'wagmi/chains';
 const metadata = {
   name: 'Universal KYC',
   description: 'Universal KYC Wallet Connection',
-  url: 'https://universalkyc.com', // Static URL
-  icons: ['https://universalkyc.com/icon.png'] // Static icon URL
+  url: 'https://universalkyc.com', // Static URL as string
+  icons: ['https://universalkyc.com/icon.png'] // Static icon URL as string
 };
 
 const chains = [mainnet];
@@ -32,7 +32,7 @@ createWeb3Modal({
   defaultChain: mainnet,
   themeMode: 'light',
   themeVariables: {
-    '--w3m-z-index': 1000 // Changed from string to number
+    '--w3m-z-index': 1000
   }
 });
 
@@ -75,7 +75,7 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
         challenge,
         rp: {
           name: "Universal KYC",
-          id: 'universalkyc.com', // Static domain
+          id: window.location.hostname, // Use current hostname instead of hardcoded value
         },
         user: {
           id: new Uint8Array(16),
@@ -94,7 +94,7 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
         publicKey: publicKeyCredentialCreationOptions
       });
 
-      const biometricHash = btoa(JSON.stringify(credential));
+      const biometricHash = btoa(String(credential));
 
       const { error } = await supabase
         .from('wallet_accounts')
