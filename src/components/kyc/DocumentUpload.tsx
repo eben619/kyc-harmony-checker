@@ -4,6 +4,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { KYCData } from "../KYCForm";
 import { Upload } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import { useUser } from "@supabase/auth-helpers-react";
 
 interface DocumentUploadProps {
   formData: KYCData;
@@ -18,28 +21,102 @@ const DocumentUpload = ({
   onNext,
   onPrev,
 }: DocumentUploadProps) => {
+  const { toast } = useToast();
+  const user = useUser();
   const [documentType, setDocumentType] = useState<string>("");
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, side?: 'front' | 'back') => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, side?: 'front' | 'back') => {
     if (e.target.files?.[0]) {
-      if (documentType === 'passport') {
-        updateFormData({ 
-          documentImage: e.target.files[0],
-          documentType: 'passport'
-        });
-      } else {
-        if (side === 'front') {
+      const file = e.target.files[0];
+      
+      try {
+        // Upload to Supabase Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user?.id}/${crypto.randomUUID()}.${fileExt}`;
+        
+        const { error: uploadError, data } = await supabase.storage
+          .from('kyc_documents')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL for verification
+        const { data: { publicUrl } } = supabase.storage
+          .from('kyc_documents')
+          .getPublicUrl(fileName);
+
+        if (documentType === 'passport') {
           updateFormData({ 
-            documentFrontImage: e.target.files[0],
-            documentType
+            documentImage: file,
+            documentType: 'passport'
           });
-        } else if (side === 'back') {
-          updateFormData({ 
-            documentBackImage: e.target.files[0],
-            documentType
-          });
+          
+          // Verify the document
+          await verifyDocument(publicUrl);
+        } else {
+          if (side === 'front') {
+            updateFormData({ 
+              documentFrontImage: file,
+              documentType
+            });
+            await verifyDocument(publicUrl);
+          } else if (side === 'back') {
+            updateFormData({ 
+              documentBackImage: file,
+              documentType
+            });
+          }
         }
+      } catch (error) {
+        console.error('Error uploading document:', error);
+        toast({
+          title: "Error",
+          description: "Failed to upload document. Please try again.",
+          variant: "destructive",
+        });
       }
+    }
+  };
+
+  const verifyDocument = async (documentUrl: string) => {
+    setIsVerifying(true);
+    try {
+      const response = await supabase.functions.invoke('verify-document', {
+        body: {
+          documentUrl,
+          formData: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            dateOfBirth: formData.dateOfBirth,
+            address: formData.address,
+          },
+          userId: user?.id,
+          documentType,
+        },
+      });
+
+      if (response.error) throw response.error;
+
+      const { matchScore, status } = response.data;
+
+      toast({
+        title: status === 'verified' ? "Verification Successful" : "Verification Needs Review",
+        description: status === 'verified' 
+          ? "Document information matches your submitted data."
+          : "Some information might need manual review.",
+        variant: status === 'verified' ? "default" : "warning",
+      });
+
+    } catch (error) {
+      console.error('Verification error:', error);
+      toast({
+        title: "Verification Error",
+        description: "Failed to verify document. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -56,7 +133,7 @@ const DocumentUpload = ({
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Upload ID Document</h2>
           <p className="text-gray-600">
-            Please select your document type and upload the required images
+            Please select your document type and upload clear images
           </p>
         </div>
 
@@ -88,6 +165,7 @@ const DocumentUpload = ({
                     className="hidden"
                     accept="image/*"
                     onChange={(e) => handleFileChange(e)}
+                    disabled={isVerifying}
                   />
                   <Label
                     htmlFor="passportUpload"
@@ -110,6 +188,7 @@ const DocumentUpload = ({
                       className="hidden"
                       accept="image/*"
                       onChange={(e) => handleFileChange(e, 'front')}
+                      disabled={isVerifying}
                     />
                     <Label
                       htmlFor="frontUpload"
@@ -130,6 +209,7 @@ const DocumentUpload = ({
                       className="hidden"
                       accept="image/*"
                       onChange={(e) => handleFileChange(e, 'back')}
+                      disabled={isVerifying}
                     />
                     <Label
                       htmlFor="backUpload"
@@ -156,9 +236,9 @@ const DocumentUpload = ({
         </Button>
         <Button
           onClick={onNext}
-          disabled={!documentType || !canProceed()}
+          disabled={!documentType || !canProceed() || isVerifying}
         >
-          Next Step
+          {isVerifying ? "Verifying..." : "Next Step"}
         </Button>
       </div>
     </div>

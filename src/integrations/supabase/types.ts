@@ -72,6 +72,42 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_verifications: {
+        Row: {
+          created_at: string | null
+          document_type: string
+          form_data: Json | null
+          id: string
+          match_score: number | null
+          ocr_extracted_data: Json | null
+          updated_at: string | null
+          user_id: string | null
+          verification_status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_type: string
+          form_data?: Json | null
+          id?: string
+          match_score?: number | null
+          ocr_extracted_data?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+          verification_status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document_type?: string
+          form_data?: Json | null
+          id?: string
+          match_score?: number | null
+          ocr_extracted_data?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+          verification_status?: string | null
+        }
+        Relationships: []
+      }
       languages: {
         Row: {
           code: string
