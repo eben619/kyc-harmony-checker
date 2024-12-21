@@ -11,8 +11,8 @@ import { mainnet } from 'wagmi/chains';
 const metadata = {
   name: 'Universal KYC',
   description: 'Universal KYC Wallet Connection',
-  url: 'https://universalkyc.com', // Static URL as string
-  icons: ['https://universalkyc.com/icon.png'] // Static icon URL as string
+  url: window.location.origin,
+  icons: [`${window.location.origin}/icon.png`]
 };
 
 const chains = [mainnet];
@@ -67,20 +67,18 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
 
       // Create static challenge array
       const challenge = new Uint8Array(32);
-      for (let i = 0; i < 32; i++) {
-        challenge[i] = Math.floor(Math.random() * 256);
-      }
+      window.crypto.getRandomValues(challenge);
 
       const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions = {
         challenge,
         rp: {
           name: "Universal KYC",
-          id: window.location.hostname, // Use current hostname instead of hardcoded value
+          id: window.location.hostname,
         },
         user: {
           id: new Uint8Array(16),
-          name: user?.email || '',
-          displayName: user?.email || '',
+          name: user?.email || 'anonymous',
+          displayName: user?.email || 'Anonymous User',
         },
         pubKeyCredParams: [{alg: -7, type: "public-key"}],
         authenticatorSelection: {
@@ -94,7 +92,14 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
         publicKey: publicKeyCredentialCreationOptions
       });
 
-      const biometricHash = btoa(String(credential));
+      // Safely convert credential to string by extracting only necessary properties
+      const credentialData = credential ? {
+        id: credential.id,
+        type: credential.type,
+        timestamp: Date.now()
+      } : null;
+
+      const biometricHash = btoa(JSON.stringify(credentialData));
 
       const { error } = await supabase
         .from('wallet_accounts')
