@@ -7,12 +7,12 @@ import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
 import { WagmiConfig, useAccount, useDisconnect } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
 
-// Initialize WalletConnect
+// Initialize WalletConnect with static values
 const metadata = {
   name: 'Universal KYC',
   description: 'Universal KYC Wallet Connection',
-  url: 'https://universalkyc.com',
-  icons: ['https://avatars.githubusercontent.com/u/37784886']
+  url: 'https://universalkyc.com', // Static URL
+  icons: ['https://universalkyc.com/icon.png'] // Static icon URL
 };
 
 const chains = [mainnet];
@@ -21,15 +21,19 @@ const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || "b2f135e64d6
 const wagmiConfig = defaultWagmiConfig({ 
   chains, 
   projectId, 
-  metadata,
+  metadata
 }) as any;
 
+// Create Web3Modal instance
 createWeb3Modal({ 
   wagmiConfig, 
   projectId, 
   chains,
   defaultChain: mainnet,
-  themeMode: 'light'
+  themeMode: 'light',
+  themeVariables: {
+    '--w3m-z-index': '1000'
+  }
 });
 
 interface WalletConnectionProps {
@@ -61,11 +65,17 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
         return;
       }
 
+      // Create static challenge array
+      const challenge = new Uint8Array(32);
+      for (let i = 0; i < 32; i++) {
+        challenge[i] = Math.floor(Math.random() * 256);
+      }
+
       const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions = {
-        challenge: new Uint8Array(32),
+        challenge,
         rp: {
           name: "Universal KYC",
-          id: window.location.hostname,
+          id: 'universalkyc.com', // Static domain
         },
         user: {
           id: new Uint8Array(16),
