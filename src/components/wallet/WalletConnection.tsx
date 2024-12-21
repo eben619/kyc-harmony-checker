@@ -32,7 +32,7 @@ createWeb3Modal({
   defaultChain: mainnet,
   themeMode: 'light',
   themeVariables: {
-    '--w3m-z-index': '1000'
+    '--w3m-z-index': 1000 // Changed from string to number
   }
 });
 
