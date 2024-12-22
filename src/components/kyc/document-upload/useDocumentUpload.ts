@@ -10,23 +10,31 @@ export const useDocumentUpload = (
 ) => {
   const { toast } = useToast();
   const user = useUser();
-  const [documentType, setDocumentType] = useState<string>("");
+  const [documentType, setDocumentType] = useState<string>(formData.documentType || "");
   const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, side?: 'front' | 'back') => {
-    if (!e.target.files?.[0] || !user) return;
-    
-    const file = e.target.files[0];
+  const handleFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>, 
+    side?: 'front' | 'back'
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) {
+      console.log("No file selected or user not authenticated");
+      return;
+    }
     
     try {
+      setIsVerifying(true);
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
       
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('kyc_documents')
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('kyc_documents')
@@ -52,6 +60,12 @@ export const useDocumentUpload = (
           });
         }
       }
+
+      toast({
+        title: "Upload Successful",
+        description: "Document uploaded successfully",
+      });
+
     } catch (error) {
       console.error('Error uploading document:', error);
       toast({
@@ -59,29 +73,32 @@ export const useDocumentUpload = (
         description: "Failed to upload document. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsVerifying(false);
     }
   };
 
   const verifyDocument = async (documentUrl: string) => {
-    setIsVerifying(true);
+    if (!user) return;
+
     try {
       const response = await supabase.functions.invoke('verify-document', {
         body: {
           documentUrl,
           formData: {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            dateOfBirth: formData.dateOfBirth,
-            address: formData.address,
+            firstName: formData.firstName || '',
+            lastName: formData.lastName || '',
+            dateOfBirth: formData.dateOfBirth || '',
+            address: formData.address || '',
           },
-          userId: user?.id,
+          userId: user.id,
           documentType,
         },
       });
 
       if (response.error) throw response.error;
 
-      const { matchScore, status } = response.data;
+      const { matchScore, status } = response.data || {};
 
       toast({
         title: status === 'verified' ? "Verification Successful" : "Verification Needs Review",
@@ -98,8 +115,6 @@ export const useDocumentUpload = (
         description: "Failed to verify document. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsVerifying(false);
     }
   };
 
