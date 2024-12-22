@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useUser } from "@supabase/auth-helpers-react";
-import { KYCData } from "../KYCForm";
+import type { KYCData } from "../../KYCForm";
 
 export const useDocumentUpload = (
   formData: KYCData,
