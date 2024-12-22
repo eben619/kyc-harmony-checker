@@ -38,44 +38,77 @@ const Language = () => {
 
   useEffect(() => {
     fetchLanguages();
+  }, []);
+
+  useEffect(() => {
     fetchFAQs();
   }, [selectedLanguage]);
 
   const fetchLanguages = async () => {
-    const { data, error } = await supabase
-      .from("languages")
-      .select("code, name");
-    
-    if (error) {
-      console.error("Error fetching languages:", error);
-      return;
+    try {
+      const { data, error } = await supabase
+        .from("languages")
+        .select("code, name");
+      
+      if (error) {
+        console.error("Error fetching languages:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch available languages",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setLanguages(data || []);
+    } catch (error) {
+      console.error("Error:", error);
     }
-    
-    setLanguages(data || []);
   };
 
   const fetchFAQs = async () => {
-    const { data: translatedFaqs, error: translationError } = await supabase
-      .from("faq_translations")
-      .select("id, question, answer")
-      .eq("language_code", selectedLanguage);
+    try {
+      // First try to get translated content
+      const { data: translatedFaqs, error: translationError } = await supabase
+        .from("faq_translations")
+        .select("id, question, answer")
+        .eq("language_code", selectedLanguage);
 
-    if (translationError || !translatedFaqs?.length) {
-      // Fallback to default FAQs if no translation found
+      if (translationError) {
+        console.error("Error fetching translations:", translationError);
+        toast({
+          title: "Error",
+          description: "Failed to fetch translated content",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // If translations exist, use them
+      if (translatedFaqs && translatedFaqs.length > 0) {
+        setFaqs(translatedFaqs);
+        return;
+      }
+
+      // If no translations found, fallback to default English FAQs
       const { data: defaultFaqs, error: faqError } = await supabase
         .from("faqs")
         .select("id, question, answer");
 
       if (faqError) {
-        console.error("Error fetching FAQs:", faqError);
+        console.error("Error fetching default FAQs:", faqError);
+        toast({
+          title: "Error",
+          description: "Failed to fetch FAQ content",
+          variant: "destructive",
+        });
         return;
       }
 
       setFaqs(defaultFaqs || []);
-      return;
+    } catch (error) {
+      console.error("Error:", error);
     }
-
-    setFaqs(translatedFaqs);
   };
 
   const toggleItem = (id: number) => {
