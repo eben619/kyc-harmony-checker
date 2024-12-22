@@ -32,6 +32,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
   };
 
   const selectedCountry = countries.find((country) => country.code === formData.country);
+  const countryList = Array.isArray(countries) ? countries : [];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 animate-fadeIn">
@@ -101,7 +102,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
                   <CommandInput placeholder="Search country..." />
                   <CommandEmpty>No country found.</CommandEmpty>
                   <CommandGroup className="max-h-[300px] overflow-y-auto">
-                    {countries.map((country) => (
+                    {countryList.map((country) => (
                       <CommandItem
                         key={country.code}
                         onSelect={() => {
