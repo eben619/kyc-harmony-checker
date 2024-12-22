@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { countries } from "@/data/countries";
+import countries from "@/data/countries";
 import { KYCData } from "../KYCForm";
 
 interface PersonalInfoProps {
