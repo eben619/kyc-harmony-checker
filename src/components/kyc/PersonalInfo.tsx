@@ -1,13 +1,25 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useState } from "react";
-import { KYCData } from "../KYCForm";
 import { cn } from "@/lib/utils";
-import countries from "../../data/countries";
+import { countries } from "@/data/countries";
+import { KYCData } from "../KYCForm";
 
 interface PersonalInfoProps {
   formData: KYCData;
@@ -15,134 +27,138 @@ interface PersonalInfoProps {
   onNext: () => void;
 }
 
+const formSchema = z.object({
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  address: z.string().min(5, "Address must be at least 5 characters"),
+  country: z.string().min(1, "Country is required"),
+  zipCode: z.string().min(1, "Zip code is required"),
+});
+
 const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) => {
-  const [open, setOpen] = useState(false);
-  const [error, setError] = useState("");
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: formData,
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.country) {
-      setError("Please select a country.");
-      return;
-    }
-
-    setError("");
+  const onSubmit = (data: any) => {
+    updateFormData(data);
     onNext();
   };
 
-  const selectedCountry = countries.find((country) => country.code === formData.country);
+  // Ensure countries is an array and find the selected country safely
   const countryList = Array.isArray(countries) ? countries : [];
+  const selectedCountry = countryList.find((country) => country.code === formData.country);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 animate-fadeIn">
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="firstName">First Name</Label>
-            <Input
-              id="firstName"
-              required
-              value={formData.firstName}
-              onChange={(e) => updateFormData({ firstName: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input
-              id="lastName"
-              required
-              value={formData.lastName}
-              onChange={(e) => updateFormData({ lastName: e.target.value })}
-            />
-          </div>
-        </div>
-        
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-fadeIn">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label htmlFor="dateOfBirth">Date of Birth</Label>
+          <Label htmlFor="firstName">First Name</Label>
           <Input
-            id="dateOfBirth"
-            type="date"
-            required
-            value={formData.dateOfBirth}
-            onChange={(e) => updateFormData({ dateOfBirth: e.target.value })}
+            id="firstName"
+            {...register("firstName")}
+            placeholder="Enter your first name"
           />
+          {errors.firstName && (
+            <p className="text-sm text-destructive">{errors.firstName.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="address">Address</Label>
+          <Label htmlFor="lastName">Last Name</Label>
           <Input
-            id="address"
-            required
-            value={formData.address}
-            onChange={(e) => updateFormData({ address: e.target.value })}
+            id="lastName"
+            {...register("lastName")}
+            placeholder="Enter your last name"
           />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Country</Label>
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={open}
-                  className={cn(
-                    "w-full justify-between",
-                    !formData.country && "text-muted-foreground"
-                  )}
-                >
-                  {selectedCountry ? selectedCountry.name : "Select country..."}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[300px] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Search country..." />
-                  <CommandEmpty>No country found.</CommandEmpty>
-                  <CommandGroup className="max-h-[300px] overflow-y-auto">
-                    {countryList.map((country) => (
-                      <CommandItem
-                        key={country.code}
-                        onSelect={() => {
-                          updateFormData({ country: country.code });
-                          setOpen(false);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            formData.country === country.code ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {country.name}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            </Popover>
-            {error && (
-              <p className="text-red-500 text-sm mt-1">{error}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="zipCode">Zip Code</Label>
-            <Input
-              id="zipCode"
-              required
-              value={formData.zipCode}
-              onChange={(e) => updateFormData({ zipCode: e.target.value })}
-            />
-          </div>
+          {errors.lastName && (
+            <p className="text-sm text-destructive">{errors.lastName.message}</p>
+          )}
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <Button type="submit">Next Step</Button>
+      <div className="space-y-2">
+        <Label htmlFor="dateOfBirth">Date of Birth</Label>
+        <Input
+          id="dateOfBirth"
+          type="date"
+          {...register("dateOfBirth")}
+        />
+        {errors.dateOfBirth && (
+          <p className="text-sm text-destructive">{errors.dateOfBirth.message}</p>
+        )}
       </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="address">Address</Label>
+        <Input
+          id="address"
+          {...register("address")}
+          placeholder="Enter your address"
+        />
+        {errors.address && (
+          <p className="text-sm text-destructive">{errors.address.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label>Country</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              className="w-full justify-between"
+            >
+              {selectedCountry ? selectedCountry.name : "Select country"}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0">
+            <Command>
+              <CommandInput placeholder="Search country..." />
+              <CommandEmpty>No country found.</CommandEmpty>
+              <CommandGroup className="max-h-[300px] overflow-y-auto">
+                {countryList.map((country) => (
+                  <CommandItem
+                    key={country.code}
+                    onSelect={() => {
+                      updateFormData({ country: country.code });
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        formData.country === country.code ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {country.name}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
+        {errors.country && (
+          <p className="text-sm text-destructive">{errors.country.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="zipCode">Zip Code</Label>
+        <Input
+          id="zipCode"
+          {...register("zipCode")}
+          placeholder="Enter your zip code"
+        />
+        {errors.zipCode && (
+          <p className="text-sm text-destructive">{errors.zipCode.message}</p>
+        )}
+      </div>
+
+      <Button type="submit" className="w-full">Next Step</Button>
     </form>
   );
 };
