@@ -129,6 +129,71 @@ export type Database = {
         }
         Relationships: []
       }
+      tax_forms: {
+        Row: {
+          applicable_countries: string[]
+          created_at: string
+          description: string | null
+          form_code: string
+          form_name: string
+          id: number
+        }
+        Insert: {
+          applicable_countries: string[]
+          created_at?: string
+          description?: string | null
+          form_code: string
+          form_name: string
+          id?: number
+        }
+        Update: {
+          applicable_countries?: string[]
+          created_at?: string
+          description?: string | null
+          form_code?: string
+          form_name?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      user_tax_forms: {
+        Row: {
+          form_data: Json | null
+          form_id: number | null
+          id: string
+          status: string | null
+          submitted_at: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          form_data?: Json | null
+          form_id?: number | null
+          id?: string
+          status?: string | null
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          form_data?: Json | null
+          form_id?: number | null
+          id?: string
+          status?: string | null
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_tax_forms_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "tax_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wallet_accounts: {
         Row: {
           biometric_hash: string | null
