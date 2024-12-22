@@ -20,6 +20,12 @@ const SingleDocumentUpload = ({
 }: SingleDocumentUploadProps) => {
   const [isHovered, setIsHovered] = useState(false);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      onChange(e);
+    }
+  };
+
   return (
     <div 
       className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
@@ -33,8 +39,11 @@ const SingleDocumentUpload = ({
         id={id}
         className="hidden"
         accept="image/*,.pdf"
-        onChange={onChange}
+        onChange={handleChange}
         disabled={disabled}
+        // Add these attributes for better cross-browser compatibility
+        capture="environment"
+        multiple={false}
       />
       <Label
         htmlFor={id}

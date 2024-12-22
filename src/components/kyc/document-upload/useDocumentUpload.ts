@@ -44,14 +44,18 @@ export const useDocumentUpload = (
         throw new Error('User not authenticated');
       }
 
+      // Create a blob from the file to ensure proper handling
+      const blob = new Blob([file], { type: file.type });
+
       // Create folder path with user ID
       const folderPath = `${user.id}/`;
       const fileName = `${folderPath}${Date.now()}-${file.name}`;
 
       const { error: uploadError } = await supabase.storage
         .from('kyc_documents')
-        .upload(fileName, file, {
+        .upload(fileName, blob, {
           cacheControl: '3600',
+          contentType: file.type,
           upsert: false
         });
 
@@ -83,6 +87,8 @@ export const useDocumentUpload = (
         title: "Success",
         description: "Document uploaded successfully",
       });
+
+      console.log('File uploaded successfully:', fileName);
     } catch (error) {
       console.error('Upload error:', error);
       toast({
