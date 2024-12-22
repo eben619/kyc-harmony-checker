@@ -37,8 +37,8 @@ const DocumentUpload = ({
 
         <div className="space-y-4">
           <DocumentTypeSelect 
-            value={documentType} 
-            onChange={setDocumentType} 
+            value={documentType || ''} 
+            onChange={(value) => setDocumentType(value)}
           />
 
           {documentType && (
@@ -52,7 +52,7 @@ const DocumentUpload = ({
                   onChange={(e) => handleFileChange(e)}
                 />
               ) : (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <SingleDocumentUpload
                     id="frontUpload"
                     label="Upload front side"

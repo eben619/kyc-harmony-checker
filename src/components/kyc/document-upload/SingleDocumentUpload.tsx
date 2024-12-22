@@ -1,5 +1,7 @@
 import { Label } from "@/components/ui/label";
 import { Upload } from "lucide-react";
+import { useState } from "react";
+import { Progress } from "@/components/ui/progress";
 
 interface SingleDocumentUploadProps {
   id: string;
@@ -16,24 +18,38 @@ const SingleDocumentUpload = ({
   disabled,
   onChange,
 }: SingleDocumentUploadProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
-    <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+    <div 
+      className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+        isHovered ? 'border-primary bg-primary/5' : 'border-gray-300'
+      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <input
         type="file"
         id={id}
         className="hidden"
-        accept="image/*"
+        accept="image/*,.pdf"
         onChange={onChange}
         disabled={disabled}
       />
       <Label
         htmlFor={id}
-        className="cursor-pointer flex flex-col items-center"
+        className={`cursor-pointer flex flex-col items-center ${disabled ? 'opacity-50' : ''}`}
       >
-        <Upload className="h-12 w-12 text-gray-400 mb-4" />
+        <Upload className={`h-12 w-12 mb-4 ${isHovered ? 'text-primary' : 'text-gray-400'}`} />
         <span className="text-sm text-gray-600">
           {fileName || label}
         </span>
+        {disabled && (
+          <div className="mt-4">
+            <Progress value={100} className="w-full" />
+            <span className="text-xs text-gray-500 mt-1">Processing...</span>
+          </div>
+        )}
       </Label>
     </div>
   );
