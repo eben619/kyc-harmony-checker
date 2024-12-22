@@ -7,7 +7,7 @@ export const useDocumentUpload = (
   formData: KYCData,
   updateFormData: (data: Partial<KYCData>) => void
 ) => {
-  const [documentType, setDocumentType] = useState<string>("");
+  const [documentType, setDocumentType] = useState<string>(formData.documentType || "");
   const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
 
@@ -15,9 +15,9 @@ export const useDocumentUpload = (
     if (!documentType) return false;
     
     if (documentType === 'passport') {
-      return !!formData.documentImage;
+      return Boolean(formData.documentImage);
     } else {
-      return !!formData.documentFrontImage && !!formData.documentBackImage;
+      return Boolean(formData.documentFrontImage && formData.documentBackImage);
     }
   };
 
@@ -38,10 +38,14 @@ export const useDocumentUpload = (
     try {
       setIsVerifying(true);
 
-      // Create folder path with user ID if available
-      const user = await supabase.auth.getUser();
-      const userId = user.data.user?.id;
-      const folderPath = userId ? `${userId}/` : '';
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Create folder path with user ID
+      const folderPath = `${user.id}/`;
       const fileName = `${folderPath}${Date.now()}-${file.name}`;
 
       const { error: uploadError } = await supabase.storage
@@ -55,6 +59,7 @@ export const useDocumentUpload = (
         throw uploadError;
       }
 
+      // Update form data based on document type
       if (documentType === 'passport') {
         updateFormData({ 
           documentImage: file,
@@ -82,7 +87,7 @@ export const useDocumentUpload = (
       console.error('Upload error:', error);
       toast({
         title: "Error",
-        description: "Failed to upload document. Please try again.",
+        description: error.message || "Failed to upload document. Please try again.",
         variant: "destructive",
       });
     } finally {

@@ -10,7 +10,7 @@ const DocumentTypeSelect = ({ value, onChange }: DocumentTypeSelectProps) => {
   return (
     <div className="space-y-2">
       <Label>Document Type</Label>
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value || undefined} onValueChange={onChange}>
         <SelectTrigger>
           <SelectValue placeholder="Select document type" />
         </SelectTrigger>

@@ -45,7 +45,7 @@ const SingleDocumentUpload = ({
           {fileName || label}
         </span>
         {disabled && (
-          <div className="mt-4">
+          <div className="mt-4 w-full">
             <Progress value={100} className="w-full" />
             <span className="text-xs text-gray-500 mt-1">Processing...</span>
           </div>
