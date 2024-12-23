@@ -37,10 +37,27 @@ const ReviewForm = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
+      // Prepare the form data for storage by removing File objects
+      const storageFormData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        dateOfBirth: formData.dateOfBirth,
+        address: formData.address,
+        country: formData.country,
+        zipCode: formData.zipCode,
+        documentType: formData.documentType,
+        documentImagePath: formData.documentImagePath,
+        documentFrontImagePath: formData.documentFrontImagePath,
+        documentBackImagePath: formData.documentBackImagePath,
+        selfieImagePath: formData.selfieImagePath,
+        biometricHash: formData.biometricHash,
+        biometricData: formData.biometricData,
+      };
+
       const { error } = await supabase.from("kyc_verifications").insert({
         user_id: user.id,
         document_type: formData.documentType,
-        form_data: formData,
+        form_data: storageFormData,
         verification_status: "pending"
       });
 

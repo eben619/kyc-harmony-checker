@@ -14,10 +14,11 @@ export type KYCData = {
   country: string;
   zipCode: string;
   documentType?: string;
-  documentImage?: File;
-  documentFrontImage?: File;
-  documentBackImage?: File;
-  selfieImage?: File;
+  // Store file paths instead of File objects
+  documentImagePath?: string;
+  documentFrontImagePath?: string;
+  documentBackImagePath?: string;
+  selfieImagePath?: string;
   biometricHash?: string;
   biometricData: {
     faceImage: string | null;

@@ -15,9 +15,9 @@ export const useDocumentUpload = (
     if (!documentType) return false;
     
     if (documentType === 'passport') {
-      return Boolean(formData.documentImage);
+      return Boolean(formData.documentImagePath);
     } else {
-      return Boolean(formData.documentFrontImage && formData.documentBackImage);
+      return Boolean(formData.documentFrontImagePath && formData.documentBackImagePath);
     }
   };
 
@@ -51,7 +51,7 @@ export const useDocumentUpload = (
       const folderPath = `${user.id}/`;
       const fileName = `${folderPath}${Date.now()}-${file.name}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data } = await supabase.storage
         .from('kyc_documents')
         .upload(fileName, blob, {
           cacheControl: '3600',
@@ -63,21 +63,21 @@ export const useDocumentUpload = (
         throw uploadError;
       }
 
-      // Update form data based on document type
+      // Update form data based on document type with file paths
       if (documentType === 'passport') {
         updateFormData({ 
-          documentImage: file,
+          documentImagePath: fileName,
           documentType: 'passport'
         });
       } else {
         if (side === 'front') {
           updateFormData({ 
-            documentFrontImage: file,
+            documentFrontImagePath: fileName,
             documentType
           });
         } else if (side === 'back') {
           updateFormData({ 
-            documentBackImage: file,
+            documentBackImagePath: fileName,
             documentType
           });
         }
