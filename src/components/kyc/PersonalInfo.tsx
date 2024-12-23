@@ -4,20 +4,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
 import countries from "@/data/countries";
 import { KYCData } from "../KYCForm";
 
@@ -37,19 +24,37 @@ const formSchema = z.object({
 });
 
 const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) => {
+  const [countrySearchTerm, setCountrySearchTerm] = useState("");
+  const [showCountryError, setShowCountryError] = useState(false);
+
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: formData,
   });
 
+  const handleCountrySearch = (value: string) => {
+    setCountrySearchTerm(value);
+    const foundCountry = countries.find(
+      country => country.name.toLowerCase() === value.toLowerCase()
+    );
+    
+    if (foundCountry) {
+      setShowCountryError(false);
+      updateFormData({ country: foundCountry.code });
+    } else {
+      setShowCountryError(true);
+      updateFormData({ country: "" });
+    }
+  };
+
   const onSubmit = (data: any) => {
+    if (!formData.country) {
+      setShowCountryError(true);
+      return;
+    }
     updateFormData(data);
     onNext();
   };
-
-  // Ensure countries is an array and find the selected country safely
-  const countryList = Array.isArray(countries) ? countries : [];
-  const selectedCountry = countryList.find((country) => country.code === formData.country);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-fadeIn">
@@ -104,45 +109,15 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
       </div>
 
       <div className="space-y-2">
-        <Label>Country</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              className="w-full justify-between"
-            >
-              {selectedCountry ? selectedCountry.name : "Select country"}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-full p-0">
-            <Command>
-              <CommandInput placeholder="Search country..." />
-              <CommandEmpty>No country found.</CommandEmpty>
-              <CommandGroup className="max-h-[300px] overflow-y-auto">
-                {countryList.map((country) => (
-                  <CommandItem
-                    key={country.code}
-                    onSelect={() => {
-                      updateFormData({ country: country.code });
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        formData.country === country.code ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {country.name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </Command>
-          </PopoverContent>
-        </Popover>
-        {errors.country && (
-          <p className="text-sm text-destructive">{errors.country.message}</p>
+        <Label htmlFor="country">Country</Label>
+        <Input
+          id="country"
+          value={countrySearchTerm}
+          onChange={(e) => handleCountrySearch(e.target.value)}
+          placeholder="Search for your country"
+        />
+        {showCountryError && (
+          <p className="text-sm text-destructive">Your country is not available</p>
         )}
       </div>
 
