@@ -7,12 +7,15 @@ import { SessionContextProvider } from "@supabase/auth-helpers-react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "./components/Layout";
 import Account from "./pages/Account";
-import KYCForm from "./components/KYCForm";
 import Privacy from "./pages/Privacy";
 import Notifications from "./pages/Notifications";
 import Tax from "./pages/Tax";
 import Language from "./pages/Language";
 import Login from "./pages/Login";
+import PersonalInfoForm from "./pages/kyc/PersonalInfoForm";
+import DocumentUploadForm from "./pages/kyc/DocumentUploadForm";
+import BiometricVerificationForm from "./pages/kyc/BiometricVerificationForm";
+import ReviewForm from "./pages/kyc/ReviewForm";
 
 const queryClient = new QueryClient();
 
@@ -58,7 +61,37 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout>
-                    <KYCForm />
+                    <PersonalInfoForm />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/kyc/document-upload"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <DocumentUploadForm />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/kyc/biometric"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <BiometricVerificationForm />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/kyc/review"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <ReviewForm />
                   </Layout>
                 </ProtectedRoute>
               }
