@@ -47,7 +47,7 @@ const DocumentUpload = ({
                 <SingleDocumentUpload
                   id="passportUpload"
                   label="Upload passport photo"
-                  fileName={formData.documentImage?.name}
+                  fileName={formData.documentImagePath}
                   disabled={isVerifying}
                   onChange={(e) => handleFileChange(e)}
                 />
@@ -56,14 +56,14 @@ const DocumentUpload = ({
                   <SingleDocumentUpload
                     id="frontUpload"
                     label="Upload front side"
-                    fileName={formData.documentFrontImage?.name}
+                    fileName={formData.documentFrontImagePath}
                     disabled={isVerifying}
                     onChange={(e) => handleFileChange(e, 'front')}
                   />
                   <SingleDocumentUpload
                     id="backUpload"
                     label="Upload back side"
-                    fileName={formData.documentBackImage?.name}
+                    fileName={formData.documentBackImagePath}
                     disabled={isVerifying}
                     onChange={(e) => handleFileChange(e, 'back')}
                   />

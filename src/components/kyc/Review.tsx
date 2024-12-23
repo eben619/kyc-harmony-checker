@@ -54,11 +54,11 @@ const Review = ({ formData, onSubmit, onPrev }: ReviewProps) => {
           <div>
             <h3 className="font-medium text-gray-600">Document Images</h3>
             {formData.documentType === 'passport' ? (
-              <p>{formData.documentImage?.name}</p>
+              <p>Passport Image: {formData.documentImagePath}</p>
             ) : (
               <div className="grid grid-cols-2 gap-4">
-                <p>Front: {formData.documentFrontImage?.name}</p>
-                <p>Back: {formData.documentBackImage?.name}</p>
+                <p>Front: {formData.documentFrontImagePath}</p>
+                <p>Back: {formData.documentBackImagePath}</p>
               </div>
             )}
           </div>

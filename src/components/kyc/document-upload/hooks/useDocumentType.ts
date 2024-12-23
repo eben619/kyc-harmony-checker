@@ -6,9 +6,9 @@ export const useDocumentType = (formData: KYCData) => {
 
   const canProceed = (formData: KYCData) => {
     if (documentType === 'passport') {
-      return !!formData.documentImage;
+      return !!formData.documentImagePath;
     }
-    return !!formData.documentFrontImage && !!formData.documentBackImage;
+    return !!formData.documentFrontImagePath && !!formData.documentBackImagePath;
   };
 
   return {
