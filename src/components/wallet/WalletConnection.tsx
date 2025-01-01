@@ -6,9 +6,6 @@ import { Wallet, Fingerprint } from "lucide-react";
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
 import { WagmiConfig, useAccount, useDisconnect, useConnect } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
-import { InjectedConnector } from 'wagmi/connectors/injected';
-import { MetaMaskConnector } from 'wagmi/connectors/metaMask';
-import { WalletConnectConnector } from 'wagmi/connectors/walletConnect';
 
 const metadata = {
   name: 'Universal KYC',
@@ -20,37 +17,25 @@ const metadata = {
 const chains = [mainnet];
 const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID;
 
+if (!projectId) {
+  console.error('WalletConnect Project ID is not defined in environment variables');
+}
+
 const wagmiConfig = defaultWagmiConfig({ 
   chains, 
-  projectId, 
+  projectId: projectId || '', 
   metadata,
-  connectors: [
-    new MetaMaskConnector({ chains }),
-    new WalletConnectConnector({ 
-      chains,
-      options: {
-        projectId,
-        showQrModal: true,
-      },
-    }),
-    new InjectedConnector({
-      chains,
-      options: {
-        name: 'Trust Wallet',
-        shimDisconnect: true,
-      },
-    }),
-  ],
-}) as any;
+});
 
+// Initialize Web3Modal
 createWeb3Modal({ 
   wagmiConfig, 
-  projectId, 
+  projectId: projectId || '', 
   chains,
   defaultChain: mainnet,
   themeMode: 'light',
   themeVariables: {
-    '--w3m-z-index': 1000
+    '--w3m-z-index': '1000'
   }
 });
 
@@ -74,6 +59,7 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
   const connectWallet = async () => {
     try {
       setConnectingWallet(true);
+      console.log("Starting wallet connection...");
 
       if (!isConnected || !address) {
         toast({
@@ -83,6 +69,8 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
         });
         return;
       }
+
+      console.log("Wallet connected:", address);
 
       const challenge = new Uint8Array(32);
       window.crypto.getRandomValues(challenge);

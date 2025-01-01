@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Scan, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BiometricData } from "./types";
