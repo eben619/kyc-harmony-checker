@@ -4,7 +4,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import countries from "@/data/countries";
 import { KYCData } from "../KYCForm";
 import { useToast } from "@/components/ui/use-toast";
@@ -28,12 +28,18 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
   const { toast } = useToast();
   const [countrySearchTerm, setCountrySearchTerm] = useState("");
   const [showCountryError, setShowCountryError] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
 
-  const { register, handleSubmit, formState: { errors, isValid } } = useForm({
+  const { register, handleSubmit, formState: { errors, isValid }, trigger } = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: formData,
     mode: "onChange"
   });
+
+  useEffect(() => {
+    // Trigger validation when component mounts or when formData changes
+    trigger();
+  }, [trigger, formData]);
 
   const handleCountrySearch = (value: string) => {
     setCountrySearchTerm(value);
@@ -48,9 +54,10 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
       setShowCountryError(true);
       updateFormData({ country: "" });
     }
+    trigger();
   };
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     if (!formData.country) {
       setShowCountryError(true);
       toast({
@@ -60,9 +67,23 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
       });
       return;
     }
+
+    // Trigger validation before proceeding
+    const isFormValid = await trigger();
+    if (!isFormValid) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields correctly",
+        variant: "destructive"
+      });
+      return;
+    }
+
     updateFormData(data);
     onNext();
   };
+
+  // ... keep existing code (form JSX)
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-fadeIn">
