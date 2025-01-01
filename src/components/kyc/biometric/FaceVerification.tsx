@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Camera, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BiometricData } from "./types";
-import * as faceapi from "face-api.js";
+import FaceDetection from "./FaceDetection";
 
 interface FaceVerificationProps {
   biometricData: BiometricData;
@@ -16,7 +16,7 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
   const { toast } = useToast();
   const [isCapturing, setIsCapturing] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isFaceDetected, setIsFaceDetected] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentInstruction, setCurrentInstruction] = useState(0);
 
@@ -26,27 +26,6 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
     "Slowly turn your head right",
     "Smile naturally",
   ];
-
-  useEffect(() => {
-    const loadModels = async () => {
-      try {
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri("/models"),
-          faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
-          faceapi.nets.faceExpressionNet.loadFromUri("/models"),
-        ]);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error loading face detection models:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load face detection models. Please refresh the page.",
-          variant: "destructive",
-        });
-      }
-    };
-    loadModels();
-  }, [toast]);
 
   const startCamera = async () => {
     try {
@@ -83,25 +62,10 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
   };
 
   const handleFaceCapture = async () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || !isFaceDetected) return;
 
     try {
       setIsCapturing(true);
-
-      // Detect face in the video stream
-      const detections = await faceapi.detectSingleFace(
-        videoRef.current,
-        new faceapi.TinyFaceDetectorOptions()
-      );
-
-      if (!detections) {
-        toast({
-          title: "No face detected",
-          description: "Please ensure your face is clearly visible",
-          variant: "destructive",
-        });
-        return;
-      }
 
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth;
@@ -138,22 +102,6 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
     }
   };
 
-  useEffect(() => {
-    return () => {
-      stopCamera();
-    };
-  }, []);
-
-  if (isLoading) {
-    return (
-      <Card className="p-6">
-        <div className="text-center">
-          <p>Loading face detection models...</p>
-        </div>
-      </Card>
-    );
-  }
-
   return (
     <Card className="p-6">
       <div className="text-center space-y-4">
@@ -168,6 +116,10 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
                     playsInline
                     muted
                     className="w-full h-full object-cover"
+                  />
+                  <FaceDetection
+                    videoRef={videoRef}
+                    onFaceDetected={setIsFaceDetected}
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2">
                     {instructions[currentInstruction]}
@@ -201,7 +153,7 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
                 </Button>
                 <Button
                   onClick={handleFaceCapture}
-                  disabled={isCapturing}
+                  disabled={isCapturing || !isFaceDetected}
                   className="w-full"
                 >
                   {isCapturing ? "Capturing..." : "Capture"}

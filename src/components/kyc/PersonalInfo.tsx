@@ -4,7 +4,13 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import countries from "@/data/countries";
 import { KYCData } from "../KYCForm";
 import { useToast } from "@/components/ui/use-toast";
@@ -26,64 +32,36 @@ const formSchema = z.object({
 
 const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) => {
   const { toast } = useToast();
-  const [countrySearchTerm, setCountrySearchTerm] = useState("");
-  const [showCountryError, setShowCountryError] = useState(false);
-  const [isFormValid, setIsFormValid] = useState(false);
 
-  const { register, handleSubmit, formState: { errors, isValid }, trigger } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+    setValue,
+    trigger,
+  } = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: formData,
-    mode: "onChange"
+    mode: "onChange",
   });
 
-  useEffect(() => {
-    // Trigger validation when component mounts or when formData changes
-    trigger();
-  }, [trigger, formData]);
-
-  const handleCountrySearch = (value: string) => {
-    setCountrySearchTerm(value);
-    const foundCountry = countries.find(
-      country => country.name.toLowerCase() === value.toLowerCase()
-    );
-    
-    if (foundCountry) {
-      setShowCountryError(false);
-      updateFormData({ country: foundCountry.code });
-    } else {
-      setShowCountryError(true);
-      updateFormData({ country: "" });
-    }
-    trigger();
-  };
-
   const onSubmit = async (data: any) => {
-    if (!formData.country) {
-      setShowCountryError(true);
-      toast({
-        title: "Error",
-        description: "Please select a valid country",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Trigger validation before proceeding
     const isFormValid = await trigger();
     if (!isFormValid) {
       toast({
         title: "Error",
         description: "Please fill in all required fields correctly",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-
     updateFormData(data);
     onNext();
   };
 
-  // ... keep existing code (form JSX)
+  const handleCountryChange = (value: string) => {
+    setValue("country", value, { shouldValidate: true });
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-fadeIn">
@@ -139,14 +117,20 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
 
       <div className="space-y-2">
         <Label htmlFor="country">Country</Label>
-        <Input
-          id="country"
-          value={countrySearchTerm}
-          onChange={(e) => handleCountrySearch(e.target.value)}
-          placeholder="Search for your country"
-        />
-        {showCountryError && (
-          <p className="text-sm text-destructive">Please select a valid country</p>
+        <Select onValueChange={handleCountryChange} defaultValue={formData.country}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select your country" />
+          </SelectTrigger>
+          <SelectContent>
+            {countries.map((country) => (
+              <SelectItem key={country.code} value={country.code}>
+                {country.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.country && (
+          <p className="text-sm text-destructive">{errors.country.message}</p>
         )}
       </div>
 
@@ -165,7 +149,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
       <Button 
         type="submit" 
         className="w-full"
-        disabled={!isValid || showCountryError}
+        disabled={!isValid}
       >
         Next Step
       </Button>
