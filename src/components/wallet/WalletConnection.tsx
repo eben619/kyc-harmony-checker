@@ -21,23 +21,26 @@ if (!projectId) {
   console.error('WalletConnect Project ID is not defined in environment variables');
 }
 
+// Ensure we have a valid projectId, even if empty
 const wagmiConfig = defaultWagmiConfig({ 
   chains, 
   projectId: projectId || '', 
   metadata,
 });
 
-// Initialize Web3Modal
-createWeb3Modal({ 
-  wagmiConfig, 
-  projectId: projectId || '', 
-  chains,
-  defaultChain: mainnet,
-  themeMode: 'light',
-  themeVariables: {
-    '--w3m-z-index': 1000 // Changed from string to number
-  }
-});
+// Initialize Web3Modal only if we have a projectId
+if (projectId) {
+  createWeb3Modal({ 
+    wagmiConfig, 
+    projectId, 
+    chains,
+    defaultChain: mainnet,
+    themeMode: 'light',
+    themeVariables: {
+      '--w3m-z-index': 1000
+    }
+  });
+}
 
 interface WalletConnectionProps {
   walletData: {
@@ -178,6 +181,26 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
 
 // Wrap the WagmiConfig with proper typing
 const WalletConnection = (props: WalletConnectionProps) => {
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!projectId) {
+      toast({
+        title: "Configuration Error",
+        description: "WalletConnect is not properly configured. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  }, []);
+
+  if (!projectId) {
+    return (
+      <div className="text-center p-4">
+        <p className="text-red-500">Wallet connection is currently unavailable.</p>
+      </div>
+    );
+  }
+
   return (
     <WagmiConfig config={wagmiConfig as any}>
       <WalletConnectionButton {...props} />
