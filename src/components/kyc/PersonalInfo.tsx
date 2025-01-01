@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import countries from "@/data/countries";
 import { KYCData } from "../KYCForm";
+import { useToast } from "@/components/ui/use-toast";
 
 interface PersonalInfoProps {
   formData: KYCData;
@@ -24,12 +25,14 @@ const formSchema = z.object({
 });
 
 const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) => {
+  const { toast } = useToast();
   const [countrySearchTerm, setCountrySearchTerm] = useState("");
   const [showCountryError, setShowCountryError] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors, isValid } } = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: formData,
+    mode: "onChange"
   });
 
   const handleCountrySearch = (value: string) => {
@@ -50,6 +53,11 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
   const onSubmit = (data: any) => {
     if (!formData.country) {
       setShowCountryError(true);
+      toast({
+        title: "Error",
+        description: "Please select a valid country",
+        variant: "destructive"
+      });
       return;
     }
     updateFormData(data);
@@ -117,7 +125,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
           placeholder="Search for your country"
         />
         {showCountryError && (
-          <p className="text-sm text-destructive">Your country is not available</p>
+          <p className="text-sm text-destructive">Please select a valid country</p>
         )}
       </div>
 
@@ -133,7 +141,13 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
         )}
       </div>
 
-      <Button type="submit" className="w-full">Next Step</Button>
+      <Button 
+        type="submit" 
+        className="w-full"
+        disabled={!isValid || showCountryError}
+      >
+        Next Step
+      </Button>
     </form>
   );
 };

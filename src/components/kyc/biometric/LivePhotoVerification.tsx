@@ -16,6 +16,7 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
   const { toast } = useToast();
   const [isCapturing, setIsCapturing] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentInstruction, setCurrentInstruction] = useState(0);
 
@@ -35,18 +36,32 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
           faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
           faceapi.nets.faceExpressionNet.loadFromUri("/models"),
         ]);
+        setIsLoading(false);
       } catch (error) {
         console.error("Error loading face detection models:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load face detection models. Please refresh the page.",
+          variant: "destructive",
+        });
       }
     };
     loadModels();
-  }, []);
+  }, [toast]);
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user"
+        } 
+      });
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play();
         setIsCameraActive(true);
       }
     } catch (error) {
@@ -69,9 +84,25 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
   };
 
   const handleLivePhotoCapture = async () => {
+    if (!videoRef.current) return;
+
     try {
       setIsCapturing(true);
-      if (!videoRef.current) return;
+
+      // Detect face in the video stream
+      const detections = await faceapi.detectSingleFace(
+        videoRef.current,
+        new faceapi.TinyFaceDetectorOptions()
+      );
+
+      if (!detections) {
+        toast({
+          title: "No face detected",
+          description: "Please ensure your face is clearly visible",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth;
@@ -114,6 +145,16 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
     };
   }, []);
 
+  if (isLoading) {
+    return (
+      <Card className="p-6">
+        <div className="text-center">
+          <p>Loading face detection models...</p>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-6">
       <div className="text-center space-y-4">
@@ -126,6 +167,7 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
                     ref={videoRef}
                     autoPlay
                     playsInline
+                    muted
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2">
@@ -163,7 +205,7 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
                   disabled={isCapturing}
                   className="w-full"
                 >
-                  Capture
+                  {isCapturing ? "Capturing..." : "Capture"}
                 </Button>
                 <Button
                   onClick={stopCamera}
