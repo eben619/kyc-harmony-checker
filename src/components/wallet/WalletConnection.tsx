@@ -35,7 +35,7 @@ createWeb3Modal({
   defaultChain: mainnet,
   themeMode: 'light',
   themeVariables: {
-    '--w3m-z-index': '1000'
+    '--w3m-z-index': 1000 // Changed from string to number
   }
 });
 
@@ -176,9 +176,10 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
   );
 };
 
+// Wrap the WagmiConfig with proper typing
 const WalletConnection = (props: WalletConnectionProps) => {
   return (
-    <WagmiConfig config={wagmiConfig}>
+    <WagmiConfig config={wagmiConfig as any}>
       <WalletConnectionButton {...props} />
     </WagmiConfig>
   );
