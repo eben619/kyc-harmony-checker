@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import { pipeline, env } from '@huggingface/transformers';
+import { pipeline } from '@huggingface/transformers';
 import { useToast } from "@/components/ui/use-toast";
-
-env.allowLocalModels = false;
 
 interface FaceDetectionProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -21,6 +19,7 @@ const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
           'Xenova/detr-resnet-50'
         );
         setDetector(objectDetector);
+        console.log("Face detection model loaded successfully");
       } catch (error) {
         console.error('Error loading face detection model:', error);
         toast({
@@ -46,6 +45,7 @@ const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
           detection.label === 'person' && detection.score > 0.85
         );
         onFaceDetected(hasFace);
+        console.log("Face detection result:", hasFace);
       } catch (error) {
         console.error('Face detection error:', error);
       }
