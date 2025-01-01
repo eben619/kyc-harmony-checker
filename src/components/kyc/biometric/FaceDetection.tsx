@@ -18,8 +18,7 @@ const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
       try {
         const objectDetector = await pipeline(
           'object-detection',
-          'Xenova/detr-resnet-50',
-          { quantized: true }
+          'Xenova/detr-resnet-50'
         );
         setDetector(objectDetector);
       } catch (error) {
