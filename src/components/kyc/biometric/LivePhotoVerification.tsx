@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Scan, CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BiometricData } from "./types";
 import FaceDetection from "./FaceDetection";
+import CameraFeed from "./camera/CameraFeed";
+import CameraControls from "./camera/CameraControls";
 
 interface LivePhotoVerificationProps {
   biometricData: BiometricData;
@@ -28,39 +29,11 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
     "Nod your head up and down",
   ];
 
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: "user"
-        } 
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        setIsCameraActive(true);
-        console.log("Camera started successfully");
-      }
-    } catch (error) {
-      console.error("Camera access error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to access camera. Please check permissions.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const stopCamera = () => {
-    if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-      setIsCameraActive(false);
-      console.log("Camera stopped");
+  const handleStreamReady = (stream: MediaStream) => {
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      setIsCameraActive(true);
+      console.log("Camera stream ready");
     }
   };
 
@@ -107,76 +80,49 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
     }
   };
 
-  useEffect(() => {
-    return () => {
-      stopCamera();
-    };
-  }, []);
+  const startCamera = () => setIsCameraActive(true);
+  const stopCamera = () => setIsCameraActive(false);
 
   return (
     <Card className="p-6">
       <div className="text-center space-y-4">
         {!biometricData.livePhotoImage ? (
           <>
-            <div className="relative w-full max-w-md mx-auto aspect-video bg-gray-100 rounded-lg overflow-hidden">
-              {isCameraActive ? (
-                <>
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover"
-                  />
-                  <FaceDetection
-                    videoRef={videoRef}
-                    onFaceDetected={setIsFaceDetected}
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2">
-                    {instructions[currentInstruction]}
-                  </div>
-                </>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <Scan className="w-16 h-16 text-gray-400" />
+            <CameraFeed
+              onStreamReady={handleStreamReady}
+              isActive={isCameraActive}
+            />
+            {isCameraActive && (
+              <>
+                <FaceDetection
+                  videoRef={videoRef}
+                  onFaceDetected={setIsFaceDetected}
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2">
+                  {instructions[currentInstruction]}
                 </div>
-              )}
-            </div>
+              </>
+            )}
             <h3 className="font-semibold">Live Photo Verification</h3>
             <p className="text-sm text-gray-600">
               Please follow the instructions to complete liveness check
             </p>
-            {!isCameraActive ? (
+            <CameraControls
+              isCameraActive={isCameraActive}
+              isCapturing={isCapturing}
+              isFaceDetected={isFaceDetected}
+              onStartCamera={startCamera}
+              onStopCamera={stopCamera}
+              onCapture={handleLivePhotoCapture}
+            />
+            {isCameraActive && (
               <Button
-                onClick={startCamera}
+                onClick={() => setCurrentInstruction((prev) => (prev + 1) % instructions.length)}
+                variant="outline"
                 className="w-full"
               >
-                Start Camera
+                Next Instruction
               </Button>
-            ) : (
-              <div className="space-y-2">
-                <Button
-                  onClick={() => setCurrentInstruction((prev) => (prev + 1) % instructions.length)}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Next Instruction
-                </Button>
-                <Button
-                  onClick={handleLivePhotoCapture}
-                  disabled={isCapturing || !isFaceDetected}
-                  className="w-full"
-                >
-                  {isCapturing ? "Capturing..." : "Capture"}
-                </Button>
-                <Button
-                  onClick={stopCamera}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Cancel
-                </Button>
-              </div>
             )}
           </>
         ) : (

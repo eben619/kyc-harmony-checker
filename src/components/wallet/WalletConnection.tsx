@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Wallet, Fingerprint } from "lucide-react";
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
-import { WagmiConfig, useAccount, useDisconnect } from 'wagmi';
+import { WagmiConfig, useAccount, useDisconnect, useConnect } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
+import { InjectedConnector } from 'wagmi/connectors/injected';
+import { MetaMaskConnector } from 'wagmi/connectors/metaMask';
+import { WalletConnectConnector } from 'wagmi/connectors/walletConnect';
 
-// Initialize WalletConnect with static values
 const metadata = {
   name: 'Universal KYC',
   description: 'Universal KYC Wallet Connection',
@@ -16,15 +18,31 @@ const metadata = {
 };
 
 const chains = [mainnet];
-const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || "b2f135e64d641e7415e333d1a66828e9";
+const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID;
 
 const wagmiConfig = defaultWagmiConfig({ 
   chains, 
   projectId, 
-  metadata
+  metadata,
+  connectors: [
+    new MetaMaskConnector({ chains }),
+    new WalletConnectConnector({ 
+      chains,
+      options: {
+        projectId,
+        showQrModal: true,
+      },
+    }),
+    new InjectedConnector({
+      chains,
+      options: {
+        name: 'Trust Wallet',
+        shimDisconnect: true,
+      },
+    }),
+  ],
 }) as any;
 
-// Create Web3Modal instance
 createWeb3Modal({ 
   wagmiConfig, 
   projectId, 
@@ -49,23 +67,23 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
   const user = useUser();
   const { toast } = useToast();
   const [connectingWallet, setConnectingWallet] = useState(false);
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const { disconnectAsync } = useDisconnect();
+  const { connectAsync } = useConnect();
 
   const connectWallet = async () => {
     try {
       setConnectingWallet(true);
 
-      if (!address) {
+      if (!isConnected || !address) {
         toast({
           title: "Error",
-          description: "Please connect your wallet first using WalletConnect",
+          description: "Please connect your wallet first",
           variant: "destructive",
         });
         return;
       }
 
-      // Create static challenge array
       const challenge = new Uint8Array(32);
       window.crypto.getRandomValues(challenge);
 
@@ -92,7 +110,6 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
         publicKey: publicKeyCredentialCreationOptions
       });
 
-      // Safely convert credential to string by extracting only necessary properties
       const credentialData = credential ? {
         id: credential.id,
         type: credential.type,
@@ -112,6 +129,7 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
       if (error) throw error;
 
       onWalletUpdate();
+      console.log("Wallet connected successfully:", address);
 
       toast({
         title: "Success",
@@ -129,6 +147,12 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
       setConnectingWallet(false);
     }
   };
+
+  useEffect(() => {
+    if (isConnected && address && !walletData?.wallet_address) {
+      connectWallet();
+    }
+  }, [isConnected, address]);
 
   if (!walletData?.wallet_address) {
     return (
@@ -155,7 +179,7 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
         variant="outline"
         className="gap-2"
         onClick={connectWallet}
-        disabled={connectingWallet}
+        disabled={connectingWallet || !isConnected}
       >
         <Fingerprint className="h-4 w-4" />
         Verify Biometrics
@@ -164,7 +188,6 @@ const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletConnection
   );
 };
 
-// Wrap the component with WagmiConfig
 const WalletConnection = (props: WalletConnectionProps) => {
   return (
     <WagmiConfig config={wagmiConfig}>
