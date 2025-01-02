@@ -1,33 +1,21 @@
-import { defaultWagmiConfig } from "@web3modal/wagmi/react";
-import { createWeb3Modal } from "@web3modal/wagmi/react";
+import { createConfig, http } from "wagmi";
 import { mainnet, polygon, optimism } from "wagmi/chains";
-import { QueryClient } from "@tanstack/react-query";
+import { createPublicClient } from "viem";
 
-export const projectId = "8f6d85eadf66e7a3d75f5a57f6fb0850";
-
-const metadata = {
-  name: "Universal KYC",
-  description: "Secure KYC Verification",
-  url: "https://universalkyc.com",
-  icons: ["https://avatars.githubusercontent.com/u/37784886"],
-};
+const alchemyKey = "Smq0OZ5rRX6EN5Ych6FRIdCXxBNJZWmm";
 
 const chains = [mainnet, polygon, optimism];
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      staleTime: 60000,
-    },
+export const config = createConfig({
+  chains,
+  transports: {
+    [mainnet.id]: http(`https://eth-mainnet.g.alchemy.com/v2/${alchemyKey}`),
+    [polygon.id]: http(`https://polygon-mainnet.g.alchemy.com/v2/${alchemyKey}`),
+    [optimism.id]: http(`https://opt-mainnet.g.alchemy.com/v2/${alchemyKey}`),
   },
 });
 
-export const wagmiConfig = defaultWagmiConfig({ 
-  chains, 
-  projectId, 
-  metadata,
-  queryClient,
+export const publicClient = createPublicClient({
+  chain: mainnet,
+  transport: http(`https://eth-mainnet.g.alchemy.com/v2/${alchemyKey}`),
 });
-
-createWeb3Modal({ wagmiConfig, projectId, chains });

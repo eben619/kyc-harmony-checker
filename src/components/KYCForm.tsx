@@ -69,7 +69,7 @@ const KYCForm = () => {
       <div className="text-center mb-6">
         <p className="font-bold text-foreground">Please make sure the information provided matches that on your ID.</p>
       </div>
-      <div className="bg-card rounded-xl shadow-lg p-8">
+      <div className="bg-card rounded-xl shadow-lg p-8 text-card-foreground">
         <ProgressSteps currentStep={step} totalSteps={4} />
 
         <div className="mt-8">

@@ -3,7 +3,8 @@ import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Wallet, Fingerprint } from "lucide-react";
-import { useAccount, useDisconnect, useConnect } from 'wagmi';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { InjectedConnector } from 'wagmi/connectors/injected';
 
 interface WalletConnectionButtonProps {
   walletData: {
@@ -19,15 +20,21 @@ export const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletCon
   const { toast } = useToast();
   const [connectingWallet, setConnectingWallet] = useState(false);
   const { address, isConnected } = useAccount();
-  const { disconnectAsync } = useDisconnect();
-  const { connectAsync } = useConnect();
+  const { connect } = useConnect({
+    connector: new InjectedConnector(),
+  });
+  const { disconnect } = useDisconnect();
 
   const connectWallet = async () => {
     try {
       setConnectingWallet(true);
-      console.log("Starting wallet connection...");
+      
+      if (!isConnected) {
+        connect();
+        return;
+      }
 
-      if (!isConnected || !address) {
+      if (!address) {
         toast({
           title: "Error",
           description: "Please connect your wallet first",
@@ -35,8 +42,6 @@ export const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletCon
         });
         return;
       }
-
-      console.log("Wallet connected:", address);
 
       const challenge = new Uint8Array(32);
       window.crypto.getRandomValues(challenge);
@@ -83,8 +88,6 @@ export const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletCon
       if (error) throw error;
 
       onWalletUpdate();
-      console.log("Wallet connected successfully:", address);
-
       toast({
         title: "Success",
         description: "Wallet connected successfully!",
@@ -102,6 +105,36 @@ export const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletCon
     }
   };
 
+  const verifyBiometrics = async () => {
+    try {
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+
+      const credential = await navigator.credentials.get({
+        publicKey: {
+          challenge,
+          rpId: window.location.hostname,
+          userVerification: "required",
+          timeout: 60000,
+        },
+      });
+
+      if (credential) {
+        toast({
+          title: "Success",
+          description: "Biometric verification successful!",
+        });
+      }
+    } catch (error) {
+      console.error('Error verifying biometrics:', error);
+      toast({
+        title: "Error",
+        description: "Biometric verification failed. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     if (isConnected && address && !walletData?.wallet_address) {
       connectWallet();
@@ -110,34 +143,40 @@ export const WalletConnectionButton = ({ walletData, onWalletUpdate }: WalletCon
 
   if (!walletData?.wallet_address) {
     return (
-      <div className="space-y-2">
-        <w3m-button />
-        <Button
-          onClick={connectWallet}
-          disabled={connectingWallet || !address}
-          className="gap-2"
-        >
-          <Wallet className="h-4 w-4" />
-          {connectingWallet ? "Connecting..." : "Bind Wallet"}
-        </Button>
-      </div>
+      <Button
+        onClick={connectWallet}
+        disabled={connectingWallet}
+        className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+      >
+        <Wallet className="h-4 w-4" />
+        {connectingWallet ? "Connecting..." : "Connect Wallet"}
+      </Button>
     );
   }
 
   return (
-    <>
-      <p className="text-muted-foreground font-mono mb-2">
+    <div className="space-y-4">
+      <p className="text-muted-foreground font-mono">
         {walletData.wallet_address}
       </p>
-      <Button
-        variant="outline"
-        className="gap-2"
-        onClick={connectWallet}
-        disabled={connectingWallet || !isConnected}
-      >
-        <Fingerprint className="h-4 w-4" />
-        Verify Biometrics
-      </Button>
-    </>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={verifyBiometrics}
+        >
+          <Fingerprint className="h-4 w-4" />
+          Verify Biometrics
+        </Button>
+        <Button
+          variant="destructive"
+          onClick={() => disconnect()}
+          className="gap-2"
+        >
+          <Wallet className="h-4 w-4" />
+          Disconnect
+        </Button>
+      </div>
+    </div>
   );
 };
