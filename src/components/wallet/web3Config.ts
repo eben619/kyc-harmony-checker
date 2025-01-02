@@ -1,33 +1,20 @@
-import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
-import { mainnet } from 'wagmi/chains';
+import { defaultWagmiConfig } from "@web3modal/wagmi/react";
+import { createWeb3Modal } from "@web3modal/wagmi/react";
+import { WagmiConfig } from "wagmi";
+import { mainnet } from "wagmi/chains";
+
+const projectId = "8f6d85eadf66e7a3d75f5a57f6fb0850";
 
 const metadata = {
-  name: 'Universal KYC',
-  description: 'Universal KYC Wallet Connection',
-  url: window.location.origin,
-  icons: [`${window.location.origin}/icon.png`]
+  name: "Web3Modal",
+  description: "Web3Modal Connection",
+  url: "https://web3modal.com",
+  icons: ["https://avatars.githubusercontent.com/u/37784886"],
 };
 
 const chains = [mainnet];
-const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID;
+const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
 
-export const wagmiConfig = defaultWagmiConfig({ 
-  chains, 
-  projectId: projectId || '', 
-  metadata,
-});
+createWeb3Modal({ wagmiConfig, projectId, chains });
 
-if (projectId) {
-  createWeb3Modal({ 
-    wagmiConfig, 
-    projectId, 
-    chains,
-    defaultChain: mainnet,
-    themeMode: 'light',
-    themeVariables: {
-      '--w3m-z-index': 1000
-    }
-  });
-}
-
-export { projectId, chains };
+export { wagmiConfig, WagmiConfig };
