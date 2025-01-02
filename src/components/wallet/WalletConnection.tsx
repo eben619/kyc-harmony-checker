@@ -3,7 +3,17 @@ import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { InjectedConnector } from "wagmi/connectors/injected";
 import { Button } from "@/components/ui/button";
 
-const WalletConnection = () => {
+interface WalletData {
+  wallet_address: string | null;
+  created_at: string | null;
+}
+
+interface WalletConnectionProps {
+  walletData?: WalletData | null;
+  onWalletUpdate?: () => Promise<void>;
+}
+
+const WalletConnection: React.FC<WalletConnectionProps> = ({ walletData, onWalletUpdate }) => {
   const { address, isConnected } = useAccount();
   const { connect } = useConnect({
     connector: new InjectedConnector(),
@@ -16,7 +26,10 @@ const WalletConnection = () => {
         <p className="text-foreground">Connected to {address}</p>
         <Button 
           variant="destructive"
-          onClick={() => disconnect()}
+          onClick={() => {
+            disconnect();
+            onWalletUpdate?.();
+          }}
         >
           Disconnect
         </Button>
@@ -26,7 +39,10 @@ const WalletConnection = () => {
 
   return (
     <Button 
-      onClick={() => connect()}
+      onClick={() => {
+        connect();
+        onWalletUpdate?.();
+      }}
       className="bg-primary text-primary-foreground hover:bg-primary/90"
     >
       Connect Wallet
