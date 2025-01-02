@@ -14,7 +14,6 @@ export type KYCData = {
   country: string;
   zipCode: string;
   documentType?: string;
-  // Store file paths instead of File objects
   documentImagePath?: string;
   documentFrontImagePath?: string;
   documentBackImagePath?: string;
@@ -66,9 +65,11 @@ const KYCForm = () => {
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-8 text-center">KYC Verification</h1>
-      <div><p className="font-bold text-center">Please make sure the information provided matches that on your ID.</p></div>
-      <div className="bg-white rounded-xl shadow-lg p-8">
+      <h1 className="text-2xl font-bold mb-8 text-center text-foreground">KYC Verification</h1>
+      <div className="text-center mb-6">
+        <p className="font-bold text-foreground">Please make sure the information provided matches that on your ID.</p>
+      </div>
+      <div className="bg-card rounded-xl shadow-lg p-8">
         <ProgressSteps currentStep={step} totalSteps={4} />
 
         <div className="mt-8">

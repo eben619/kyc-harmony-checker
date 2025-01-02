@@ -51,7 +51,7 @@ const Layout = ({ children }: LayoutProps) => {
               </Button>
             </div>
           </div>
-          {children}
+          <div className="text-foreground">{children}</div>
         </main>
       </div>
     </SidebarProvider>

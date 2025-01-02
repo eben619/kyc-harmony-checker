@@ -43,7 +43,7 @@ const AppSidebar = () => {
               className="h-full w-full object-cover"
             />
           </div>
-          <h1 className="text-2xl font-bold">Universal KYC</h1>
+          <h1 className="text-2xl font-bold text-foreground">Universal KYC</h1>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -51,18 +51,18 @@ const AppSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
-                <SidebarMenuItem key={item.title} className="py-1">
+                <SidebarMenuItem key={item.title} className="py-2">
                   <SidebarMenuButton
                     asChild
                     isActive={location.pathname === item.path}
                     tooltip={item.title}
-                    className="h-12 text-base"
+                    className="h-14 text-lg"
                   >
                     <button
                       onClick={() => handleNavigation(item.path)}
                       className="flex w-full items-center gap-3"
                     >
-                      <item.icon className="h-5 w-5" />
+                      <item.icon className="h-6 w-6" />
                       <span>{item.title}</span>
                     </button>
                   </SidebarMenuButton>
