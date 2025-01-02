@@ -1,6 +1,6 @@
-import { createConfig, http } from "wagmi";
+import { createConfig } from "wagmi";
 import { mainnet, polygon, optimism } from "wagmi/chains";
-import { createPublicClient } from "viem";
+import { createPublicClient, http } from "viem";
 
 const alchemyKey = "Smq0OZ5rRX6EN5Ych6FRIdCXxBNJZWmm";
 
