@@ -20,16 +20,35 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ walletData, onWalle
   });
   const { disconnect } = useDisconnect();
 
-  if (isConnected) {
+  const handleConnect = async () => {
+    try {
+      await connect();
+      if (onWalletUpdate) {
+        await onWalletUpdate();
+      }
+    } catch (error) {
+      console.error("Failed to connect wallet:", error);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      disconnect();
+      if (onWalletUpdate) {
+        await onWalletUpdate();
+      }
+    } catch (error) {
+      console.error("Failed to disconnect wallet:", error);
+    }
+  };
+
+  if (isConnected && address) {
     return (
       <div className="flex flex-col gap-4 items-center">
         <p className="text-foreground">Connected to {address}</p>
         <Button 
           variant="destructive"
-          onClick={() => {
-            disconnect();
-            onWalletUpdate?.();
-          }}
+          onClick={handleDisconnect}
         >
           Disconnect
         </Button>
@@ -39,10 +58,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ walletData, onWalle
 
   return (
     <Button 
-      onClick={() => {
-        connect();
-        onWalletUpdate?.();
-      }}
+      onClick={handleConnect}
       className="bg-primary text-primary-foreground hover:bg-primary/90"
     >
       Connect Wallet
