@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { SessionContextProvider } from "@supabase/auth-helpers-react";
+import { SessionContextProvider, useSessionContext } from "@supabase/auth-helpers-react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "./components/Layout";
 import Account from "./pages/Account";
@@ -16,14 +16,46 @@ import PersonalInfoForm from "./pages/kyc/PersonalInfoForm";
 import DocumentUploadForm from "./pages/kyc/DocumentUploadForm";
 import BiometricVerificationForm from "./pages/kyc/BiometricVerificationForm";
 import ReviewForm from "./pages/kyc/ReviewForm";
+import { useEffect, useState } from "react";
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const session = supabase.auth.getSession();
+  const { session, isLoading } = useSessionContext();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (!currentSession) {
+          // Clear any stale data
+          await supabase.auth.signOut();
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkSession();
+  }, []);
+
+  // Show loading state while checking session
+  if (isLoading || isChecking) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Redirect to login if no session
   if (!session) {
     return <Navigate to="/login" replace />;
   }
+
   return <>{children}</>;
 };
 
