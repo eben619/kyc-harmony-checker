@@ -1,20 +1,36 @@
-import { WagmiConfig } from 'wagmi';
-import { config } from './web3Config';
-import { WalletConnectionButton } from './WalletConnectionButton';
+import React from "react";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { InjectedConnector } from "wagmi/connectors/injected";
+import { Button } from "@/components/ui/button";
 
-interface WalletConnectionProps {
-  walletData: {
-    wallet_address: string | null;
-    created_at: string | null;
-  } | null;
-  onWalletUpdate: () => void;
-}
+const WalletConnection = () => {
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect({
+    connector: new InjectedConnector(),
+  });
+  const { disconnect } = useDisconnect();
 
-const WalletConnection = (props: WalletConnectionProps) => {
+  if (isConnected) {
+    return (
+      <div className="flex flex-col gap-4 items-center">
+        <p className="text-foreground">Connected to {address}</p>
+        <Button 
+          variant="destructive"
+          onClick={() => disconnect()}
+        >
+          Disconnect
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <WagmiConfig config={config}>
-      <WalletConnectionButton {...props} />
-    </WagmiConfig>
+    <Button 
+      onClick={() => connect()}
+      className="bg-primary text-primary-foreground hover:bg-primary/90"
+    >
+      Connect Wallet
+    </Button>
   );
 };
 
