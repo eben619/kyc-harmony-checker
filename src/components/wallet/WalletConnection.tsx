@@ -34,7 +34,7 @@ const WalletConnection = (props: WalletConnectionProps) => {
   }
 
   return (
-    <WagmiConfig config={wagmiConfig as any}>
+    <WagmiConfig config={wagmiConfig}>
       <WalletConnectionButton {...props} />
     </WagmiConfig>
   );

@@ -1,9 +1,8 @@
 import { defaultWagmiConfig } from "@web3modal/wagmi/react";
 import { createWeb3Modal } from "@web3modal/wagmi/react";
-import { WagmiConfig } from "wagmi";
 import { mainnet } from "wagmi/chains";
 
-const projectId = "8f6d85eadf66e7a3d75f5a57f6fb0850";
+export const projectId = "8f6d85eadf66e7a3d75f5a57f6fb0850";
 
 const metadata = {
   name: "Web3Modal",
@@ -13,8 +12,6 @@ const metadata = {
 };
 
 const chains = [mainnet];
-const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
+export const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
 
 createWeb3Modal({ wagmiConfig, projectId, chains });
-
-export { wagmiConfig, WagmiConfig };
