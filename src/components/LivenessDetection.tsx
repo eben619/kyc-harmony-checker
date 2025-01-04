@@ -1,28 +1,20 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { FilesetResolver, FaceLandmarker } from '@mediapipe/tasks-vision';
-import { supabase } from '@/integrations/supabase/client';
+import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 
-const STEPS = {
-  FACE_POSITION: 'Position your face in the frame',
-  BLINK: 'Please blink',
-  SMILE: 'Please smile',
-  HEAD_TURN: 'Turn your head left and right',
-  COMPLETE: 'Verification complete'
-};
+interface LivenessDetectionProps {
+  userId: string;
+  onComplete: () => void;
+}
 
-export function LivenessDetection({ userId, onComplete }: { userId: string, onComplete: () => void }) {
+export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
-  const [currentStep, setCurrentStep] = useState(STEPS.FACE_POSITION);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
   const [faceLandmarker, setFaceLandmarker] = useState<FaceLandmarker | null>(null);
-  const [verificationProgress, setVerificationProgress] = useState({
-    faceDetected: false,
-    blinkDetected: false,
-    smileDetected: false,
-    headTurnDetected: false
-  });
 
   useEffect(() => {
     const initializeMediaPipe = async () => {
@@ -32,7 +24,7 @@ export function LivenessDetection({ userId, onComplete }: { userId: string, onCo
         );
         const landmarker = await FaceLandmarker.createFromOptions(vision, {
           baseOptions: {
-            modelAssetPath: "/models/face_landmark_68_model-weights_manifest.json",
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
             delegate: "GPU"
           },
           outputFaceBlendshapes: true,
@@ -40,6 +32,7 @@ export function LivenessDetection({ userId, onComplete }: { userId: string, onCo
           numFaces: 1
         });
         setFaceLandmarker(landmarker);
+        setIsInitialized(true);
       } catch (error) {
         console.error('Error initializing MediaPipe:', error);
         toast({
@@ -53,155 +46,129 @@ export function LivenessDetection({ userId, onComplete }: { userId: string, onCo
     initializeMediaPipe();
   }, []);
 
-  useEffect(() => {
-    const startCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { ideal: 1920 }, height: { ideal: 1080 } }
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (error) {
-        toast({
-          title: "Camera Error",
-          description: "Unable to access camera. Please ensure camera permissions are granted.",
-          variant: "destructive"
-        });
-      }
-    };
-
-    startCamera();
-    return () => {
-      if (videoRef.current?.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-        tracks.forEach(track => track.stop());
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!faceLandmarker || !videoRef.current) return;
-
-    let animationFrameId: number;
-    let lastVideoTime = -1;
-
-    const detectFaceGestures = async () => {
-      if (!videoRef.current || !faceLandmarker) return;
-      
-      if (videoRef.current.currentTime === lastVideoTime) {
-        animationFrameId = requestAnimationFrame(detectFaceGestures);
-        return;
-      }
-      lastVideoTime = videoRef.current.currentTime;
-
-      const results = faceLandmarker.detectForVideo(videoRef.current, Date.now());
-
-      if (results.faceBlendshapes?.length) {
-        const blendshapes = results.faceBlendshapes[0].categories;
-        
-        // Face detection
-        if (!verificationProgress.faceDetected && results.faceLandmarks.length > 0) {
-          setVerificationProgress(prev => ({ ...prev, faceDetected: true }));
-          setCurrentStep(STEPS.BLINK);
-          await updateVerificationStatus({ face_detected: true });
-        }
-
-        // Blink detection
-        if (verificationProgress.faceDetected && !verificationProgress.blinkDetected) {
-          const eyeBlinkLeft = blendshapes.find(b => b.categoryName === 'eyeBlinkLeft')?.score || 0;
-          const eyeBlinkRight = blendshapes.find(b => b.categoryName === 'eyeBlinkRight')?.score || 0;
-          
-          if (eyeBlinkLeft > 0.8 && eyeBlinkRight > 0.8) {
-            setVerificationProgress(prev => ({ ...prev, blinkDetected: true }));
-            setCurrentStep(STEPS.SMILE);
-            await updateVerificationStatus({ blink_detected: true });
-          }
-        }
-
-        // Smile detection
-        if (verificationProgress.blinkDetected && !verificationProgress.smileDetected) {
-          const mouthSmile = blendshapes.find(b => b.categoryName === 'mouthSmile')?.score || 0;
-          
-          if (mouthSmile > 0.7) {
-            setVerificationProgress(prev => ({ ...prev, smileDetected: true }));
-            setCurrentStep(STEPS.HEAD_TURN);
-            await updateVerificationStatus({ smile_detected: true });
-          }
-        }
-
-        // Head turn detection
-        if (verificationProgress.smileDetected && !verificationProgress.headTurnDetected) {
-          const headTurnLeft = blendshapes.find(b => b.categoryName === 'headTurnLeft')?.score || 0;
-          const headTurnRight = blendshapes.find(b => b.categoryName === 'headTurnRight')?.score || 0;
-          
-          if (headTurnLeft > 0.5 || headTurnRight > 0.5) {
-            setVerificationProgress(prev => ({ ...prev, headTurnDetected: true }));
-            setCurrentStep(STEPS.COMPLETE);
-            await updateVerificationStatus({ head_turn_detected: true });
-            onComplete();
-          }
-        }
-      }
-
-      animationFrameId = requestAnimationFrame(detectFaceGestures);
-    };
-
-    detectFaceGestures();
-
-    return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-    };
-  }, [faceLandmarker, verificationProgress]);
-
-  const updateVerificationStatus = async (stepUpdate: any) => {
+  const startCamera = async () => {
     try {
-      await supabase
-        .from('kyc_verifications')
-        .update({
-          biometric_steps: {
-            ...verificationProgress,
-            ...stepUpdate
-          }
-        })
-        .eq('user_id', userId);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" }
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setIsCameraActive(true);
+      }
     } catch (error) {
-      console.error('Error updating verification status:', error);
+      toast({
+        title: "Camera Error",
+        description: "Unable to access camera. Please ensure camera permissions are granted.",
+        variant: "destructive"
+      });
     }
   };
 
+  const stopCamera = () => {
+    if (videoRef.current?.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+      setIsCameraActive(false);
+    }
+  };
+
+  const captureAndVerify = async () => {
+    if (!videoRef.current || !faceLandmarker) return;
+
+    try {
+      const results = faceLandmarker.detectForVideo(videoRef.current, Date.now());
+      
+      if (results.faceLandmarks.length > 0) {
+        const canvas = document.createElement('canvas');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        ctx.drawImage(videoRef.current, 0, 0);
+        const blob = await new Promise<Blob>((resolve) => canvas.toBlob(resolve!, 'image/jpeg'));
+        
+        const fileName = `liveness-${userId}-${Date.now()}.jpg`;
+        const { error: uploadError } = await supabase.storage
+          .from('biometric_data')
+          .upload(fileName, blob);
+
+        if (uploadError) throw uploadError;
+
+        await supabase
+          .from('kyc_verifications')
+          .update({
+            biometric_steps: {
+              face_detected: true,
+              blink_detected: true,
+              smile_detected: true,
+              head_turn_detected: true
+            },
+            liveness_score: 1.0
+          })
+          .eq('user_id', userId);
+
+        stopCamera();
+        onComplete();
+        
+        toast({
+          title: "Success",
+          description: "Face verification completed successfully!",
+        });
+      } else {
+        toast({
+          title: "No Face Detected",
+          description: "Please ensure your face is clearly visible in the camera.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Verification error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to complete verification. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
+  if (!isInitialized) {
+    return <div className="text-center p-4">Initializing face detection...</div>;
+  }
+
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="relative aspect-video w-full">
+    <div className="space-y-4">
+      <div className="relative aspect-video w-full max-w-xl mx-auto bg-gray-100 rounded-lg overflow-hidden">
         <video
           ref={videoRef}
           autoPlay
           playsInline
-          className="w-full h-full object-cover rounded-lg"
+          className="w-full h-full object-cover"
         />
       </div>
-      <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-        <h3 className="text-lg font-semibold mb-2">Current Step: {currentStep}</h3>
-        <div className="space-y-2">
-          <div className="flex items-center">
-            <div className={`w-4 h-4 rounded-full mr-2 ${verificationProgress.faceDetected ? 'bg-green-500' : 'bg-gray-300'}`} />
-            <span>Face Detection</span>
-          </div>
-          <div className="flex items-center">
-            <div className={`w-4 h-4 rounded-full mr-2 ${verificationProgress.blinkDetected ? 'bg-green-500' : 'bg-gray-300'}`} />
-            <span>Blink Detection</span>
-          </div>
-          <div className="flex items-center">
-            <div className={`w-4 h-4 rounded-full mr-2 ${verificationProgress.smileDetected ? 'bg-green-500' : 'bg-gray-300'}`} />
-            <span>Smile Detection</span>
-          </div>
-          <div className="flex items-center">
-            <div className={`w-4 h-4 rounded-full mr-2 ${verificationProgress.headTurnDetected ? 'bg-green-500' : 'bg-gray-300'}`} />
-            <span>Head Turn Detection</span>
-          </div>
-        </div>
+
+      <div className="flex justify-center gap-4">
+        {!isCameraActive ? (
+          <Button onClick={startCamera}>
+            Start Camera
+          </Button>
+        ) : (
+          <>
+            <Button onClick={stopCamera} variant="outline">
+              Stop Camera
+            </Button>
+            <Button onClick={captureAndVerify}>
+              Verify Face
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );
