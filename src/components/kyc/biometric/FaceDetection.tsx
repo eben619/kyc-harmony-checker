@@ -15,7 +15,8 @@ const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
     const loadModel = async () => {
       try {
         const objectDetector = await pipeline('object-detection', 'Xenova/detr-resnet-50', {
-          quantized: false,
+          revision: 'main',
+          cache: true
         });
         setDetector(objectDetector);
         console.log("Face detection model loaded successfully");
