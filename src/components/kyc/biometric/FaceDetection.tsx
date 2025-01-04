@@ -52,14 +52,21 @@ const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
 
         // Convert canvas to blob
         const blob = await new Promise<Blob>((resolve) => 
-          canvas.toBlob(blob => resolve(blob!), 'image/jpeg')
+          canvas.toBlob(blob => resolve(blob!), 'image/jpeg', 0.8)
         );
 
-        // Create a File object from the blob
-        const imageFile = new File([blob], 'frame.jpg', { type: 'image/jpeg' });
+        // Convert blob to base64 string
+        const base64String = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64 = reader.result as string;
+            resolve(base64);
+          };
+          reader.readAsDataURL(blob);
+        });
 
-        // Run detection on the image file
-        const output = await detector(imageFile);
+        // Run detection on the base64 string
+        const output = await detector(base64String);
         
         // Check if a person is detected with high confidence
         const hasFace = output.some((detection: any) => 
