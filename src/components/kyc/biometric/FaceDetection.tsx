@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { pipeline } from '@huggingface/transformers';
+import * as faceapi from 'face-api.js';
 import { useToast } from "@/components/ui/use-toast";
 
 interface FaceDetectionProps {
@@ -9,71 +9,68 @@ interface FaceDetectionProps {
 
 const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
   const { toast } = useToast();
-  const [detector, setDetector] = useState<any>(null);
+  const [isModelLoaded, setIsModelLoaded] = useState(false);
 
   useEffect(() => {
-    const loadModel = async () => {
+    const loadModels = async () => {
       try {
-        const objectDetector = await pipeline('object-detection', 'Xenova/detr-resnet-50', {
-          revision: 'main',
-          cache: true
-        });
-        setDetector(objectDetector);
-        console.log("Face detection model loaded successfully");
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+          faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+          faceapi.nets.faceExpressionNet.loadFromUri('/models')
+        ]);
+        setIsModelLoaded(true);
+        console.log("Face detection models loaded successfully");
       } catch (error) {
-        console.error('Error loading face detection model:', error);
+        console.error('Error loading face detection models:', error);
         toast({
           title: "Error",
-          description: "Failed to load face detection model. Please refresh the page.",
+          description: "Failed to load face detection models. Please refresh the page.",
           variant: "destructive",
         });
       }
     };
 
-    loadModel();
+    loadModels();
   }, [toast]);
 
   useEffect(() => {
-    if (!detector || !videoRef.current) return;
+    if (!isModelLoaded || !videoRef.current) return;
+
+    let animationFrameId: number;
 
     const detectFace = async () => {
       if (!videoRef.current) return;
 
       try {
-        // Create a canvas to capture the video frame
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        
-        if (!context) return;
+        const detections = await faceapi
+          .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks()
+          .withFaceExpressions();
 
-        // Set canvas dimensions to match video
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
-
-        // Draw the current video frame to canvas
-        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-
-        // Get the data URL from canvas
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-
-        // Run detection on the data URL string
-        const output = await detector(dataUrl);
-        
-        // Check if a person is detected with high confidence
-        const hasFace = output.some((detection: any) => 
-          detection.label === 'person' && detection.score > 0.85
-        );
-        
+        const hasFace = !!detections;
         onFaceDetected(hasFace);
-        console.log("Face detection result:", hasFace);
+
+        if (hasFace) {
+          // Additional checks can be added here for specific expressions or landmarks
+          console.log("Face detected with expressions:", detections.expressions);
+        }
+
       } catch (error) {
         console.error('Face detection error:', error);
       }
+
+      animationFrameId = requestAnimationFrame(detectFace);
     };
 
-    const interval = setInterval(detectFace, 1000);
-    return () => clearInterval(interval);
-  }, [detector, videoRef, onFaceDetected]);
+    detectFace();
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [isModelLoaded, videoRef, onFaceDetected]);
 
   return null;
 };
