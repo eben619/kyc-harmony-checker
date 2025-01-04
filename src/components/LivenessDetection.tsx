@@ -26,19 +26,28 @@ export function LivenessDetection({ userId, onComplete }: { userId: string, onCo
 
   useEffect(() => {
     const initializeMediaPipe = async () => {
-      const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-      );
-      const landmarker = await FaceLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-          delegate: "GPU"
-        },
-        outputFaceBlendshapes: true,
-        runningMode: "VIDEO",
-        numFaces: 1
-      });
-      setFaceLandmarker(landmarker);
+      try {
+        const vision = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+        );
+        const landmarker = await FaceLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: "/models/face_landmark_68_model-weights_manifest.json",
+            delegate: "GPU"
+          },
+          outputFaceBlendshapes: true,
+          runningMode: "VIDEO",
+          numFaces: 1
+        });
+        setFaceLandmarker(landmarker);
+      } catch (error) {
+        console.error('Error initializing MediaPipe:', error);
+        toast({
+          title: "Error",
+          description: "Failed to initialize face detection. Please refresh the page.",
+          variant: "destructive"
+        });
+      }
     };
 
     initializeMediaPipe();
@@ -48,7 +57,7 @@ export function LivenessDetection({ userId, onComplete }: { userId: string, onCo
     const startCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }
+          video: { facingMode: "user", width: { ideal: 1920 }, height: { ideal: 1080 } }
         });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -164,7 +173,7 @@ export function LivenessDetection({ userId, onComplete }: { userId: string, onCo
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto">
       <div className="relative aspect-video w-full">
         <video
           ref={videoRef}

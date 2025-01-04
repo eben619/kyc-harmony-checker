@@ -74,10 +74,12 @@ export type Database = {
       }
       kyc_verifications: {
         Row: {
+          biometric_steps: Json | null
           created_at: string | null
           document_type: string
           form_data: Json | null
           id: string
+          liveness_score: number | null
           match_score: number | null
           ocr_extracted_data: Json | null
           updated_at: string | null
@@ -85,10 +87,12 @@ export type Database = {
           verification_status: string | null
         }
         Insert: {
+          biometric_steps?: Json | null
           created_at?: string | null
           document_type: string
           form_data?: Json | null
           id?: string
+          liveness_score?: number | null
           match_score?: number | null
           ocr_extracted_data?: Json | null
           updated_at?: string | null
@@ -96,10 +100,12 @@ export type Database = {
           verification_status?: string | null
         }
         Update: {
+          biometric_steps?: Json | null
           created_at?: string | null
           document_type?: string
           form_data?: Json | null
           id?: string
+          liveness_score?: number | null
           match_score?: number | null
           ocr_extracted_data?: Json | null
           updated_at?: string | null
