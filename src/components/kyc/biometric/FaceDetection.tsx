@@ -14,7 +14,9 @@ const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
   useEffect(() => {
     const loadModel = async () => {
       try {
-        const objectDetector = await pipeline('object-detection', 'Xenova/detr-resnet-50');
+        const objectDetector = await pipeline('object-detection', 'Xenova/detr-resnet-50', {
+          quantized: false,
+        });
         setDetector(objectDetector);
         console.log("Face detection model loaded successfully");
       } catch (error) {
@@ -50,17 +52,11 @@ const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
         // Draw the current video frame to canvas
         context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
-        // Create an Image element and set its source to the canvas data
-        const img = new Image();
-        img.src = canvas.toDataURL('image/jpeg', 0.8);
+        // Get the data URL from canvas
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
 
-        // Wait for the image to load
-        await new Promise((resolve) => {
-          img.onload = resolve;
-        });
-
-        // Run detection on the image element
-        const output = await detector(img);
+        // Run detection on the data URL string
+        const output = await detector(dataUrl);
         
         // Check if a person is detected with high confidence
         const hasFace = output.some((detection: any) => 
