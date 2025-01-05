@@ -8,16 +8,18 @@ import { Button } from "@/components/ui/button";
 import UserProfile from "@/components/user/UserProfile";
 import WalletConnection from "@/components/wallet/WalletConnection";
 
+interface WalletData {
+  wallet_address: string | null;
+  created_at: string | null;
+}
+
 const Account = () => {
   const supabase = useSupabaseClient();
   const user = useUser();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [walletData, setWalletData] = useState<{
-    wallet_address: string | null;
-    created_at: string | null;
-  } | null>(null);
+  const [walletData, setWalletData] = useState<WalletData | null>(null);
 
   const fetchWalletAccount = async () => {
     try {
@@ -26,7 +28,7 @@ const Account = () => {
 
       const { data: walletData, error } = await supabase
         .from("wallet_accounts")
-        .select("wallet_address")
+        .select("wallet_address, created_at")
         .eq("user_id", user.id)
         .maybeSingle();
 
