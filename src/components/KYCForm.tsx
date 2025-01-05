@@ -8,6 +8,7 @@ import ProgressSteps from "./kyc/ProgressSteps";
 
 export type KYCData = {
   firstName: string;
+  middleName?: string;
   lastName: string;
   dateOfBirth: string;
   address: string;
@@ -31,6 +32,7 @@ const KYCForm = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<KYCData>({
     firstName: "",
+    middleName: "",
     lastName: "",
     dateOfBirth: "",
     address: "",

@@ -81,6 +81,7 @@ export type Database = {
           id: string
           liveness_score: number | null
           match_score: number | null
+          middle_name: string | null
           ocr_extracted_data: Json | null
           updated_at: string | null
           user_id: string | null
@@ -94,6 +95,7 @@ export type Database = {
           id?: string
           liveness_score?: number | null
           match_score?: number | null
+          middle_name?: string | null
           ocr_extracted_data?: Json | null
           updated_at?: string | null
           user_id?: string | null
@@ -107,6 +109,7 @@ export type Database = {
           id?: string
           liveness_score?: number | null
           match_score?: number | null
+          middle_name?: string | null
           ocr_extracted_data?: Json | null
           updated_at?: string | null
           user_id?: string | null

@@ -23,6 +23,7 @@ interface PersonalInfoProps {
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
+  middleName: z.string().optional(),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   address: z.string().min(5, "Address must be at least 5 characters"),
@@ -67,7 +68,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-fadeIn">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label htmlFor="firstName">First Name</Label>
+          <Label htmlFor="firstName">First Name *</Label>
           <Input
             id="firstName"
             {...register("firstName")}
@@ -79,20 +80,29 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="lastName">Last Name</Label>
+          <Label htmlFor="middleName">Middle Name (Optional)</Label>
           <Input
-            id="lastName"
-            {...register("lastName")}
-            placeholder="Enter your last name"
+            id="middleName"
+            {...register("middleName")}
+            placeholder="Enter your middle name"
           />
-          {errors.lastName && (
-            <p className="text-sm text-destructive">{errors.lastName.message}</p>
-          )}
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="dateOfBirth">Date of Birth</Label>
+        <Label htmlFor="lastName">Last Name *</Label>
+        <Input
+          id="lastName"
+          {...register("lastName")}
+          placeholder="Enter your last name"
+        />
+        {errors.lastName && (
+          <p className="text-sm text-destructive">{errors.lastName.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="dateOfBirth">Date of Birth *</Label>
         <Input
           id="dateOfBirth"
           type="date"
@@ -104,7 +114,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="address">Address</Label>
+        <Label htmlFor="address">Address *</Label>
         <Input
           id="address"
           {...register("address")}
@@ -116,7 +126,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="country">Country</Label>
+        <Label htmlFor="country">Country *</Label>
         <Select onValueChange={handleCountryChange} defaultValue={formData.country}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select your country" />
@@ -135,7 +145,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext }: PersonalInfoProps) =
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="zipCode">Zip Code</Label>
+        <Label htmlFor="zipCode">Zip Code *</Label>
         <Input
           id="zipCode"
           {...register("zipCode")}
