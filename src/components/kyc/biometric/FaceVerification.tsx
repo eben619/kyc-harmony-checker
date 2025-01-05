@@ -17,9 +17,15 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
   const [isCapturing, setIsCapturing] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isFaceDetected, setIsFaceDetected] = useState(false);
-  const [isHeadTurned, setIsHeadTurned] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [currentInstruction] = useState("Turn your head slowly sideways");
+  const [currentInstruction, setCurrentInstruction] = useState(0);
+
+  const instructions = [
+    "Look straight at the camera",
+    "Slowly turn your head left",
+    "Slowly turn your head right",
+    "Smile naturally",
+  ];
 
   const startCamera = async () => {
     try {
@@ -56,7 +62,7 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
   };
 
   const handleFaceCapture = async () => {
-    if (!videoRef.current || !isFaceDetected || !isHeadTurned) return;
+    if (!videoRef.current || !isFaceDetected) return;
 
     try {
       setIsCapturing(true);
@@ -96,16 +102,6 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
     }
   };
 
-  const handleHeadTurn = (turned: boolean) => {
-    if (turned && !isHeadTurned) {
-      setIsHeadTurned(true);
-      toast({
-        title: "Great!",
-        description: "Head turn detected. You can now complete the verification.",
-      });
-    }
-  };
-
   return (
     <Card className="p-6">
       <div className="text-center space-y-4">
@@ -124,10 +120,9 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
                   <FaceDetection
                     videoRef={videoRef}
                     onFaceDetected={setIsFaceDetected}
-                    onHeadTurn={handleHeadTurn}
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2">
-                    {currentInstruction}
+                    {instructions[currentInstruction]}
                   </div>
                 </>
               ) : (
@@ -150,8 +145,15 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
             ) : (
               <div className="space-y-2">
                 <Button
+                  onClick={() => setCurrentInstruction((prev) => (prev + 1) % instructions.length)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Next Instruction
+                </Button>
+                <Button
                   onClick={handleFaceCapture}
-                  disabled={isCapturing || !isFaceDetected || !isHeadTurned}
+                  disabled={isCapturing || !isFaceDetected}
                   className="w-full"
                 >
                   {isCapturing ? "Capturing..." : "Capture"}
