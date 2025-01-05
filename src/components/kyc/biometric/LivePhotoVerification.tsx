@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Camera } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -7,6 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { BiometricData } from "./types";
 import FaceDetection from "./FaceDetection";
 import CameraFeed from "./camera/CameraFeed";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface LivePhotoVerificationProps {
   biometricData: BiometricData;
@@ -20,6 +26,7 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
   const [isFaceDetected, setIsFaceDetected] = useState(false);
   const [currentInstruction, setCurrentInstruction] = useState(0);
   const [instructionCompleted, setInstructionCompleted] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const instructionTimeout = useRef<NodeJS.Timeout>();
 
@@ -65,6 +72,7 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
       if (currentInstruction === instructions.length - 1) {
         onCapture({ livePhotoImage: fileName });
         stopCamera();
+        setIsDialogOpen(false);
         toast({
           title: "Success",
           description: "Live photo verification completed successfully",
@@ -98,13 +106,18 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
     };
   }, [instructionCompleted, isFaceDetected]);
 
-  const startCamera = () => setIsCameraActive(true);
+  const startCamera = () => {
+    setIsDialogOpen(true);
+    setIsCameraActive(true);
+  };
+
   const stopCamera = () => {
     if (videoRef.current?.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach(track => track.stop());
     }
     setIsCameraActive(false);
+    setIsDialogOpen(false);
   };
 
   return (
@@ -112,43 +125,45 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
       <div className="text-center space-y-4">
         {!biometricData.livePhotoImage ? (
           <>
-            <div className="relative">
-              <CameraFeed
-                onStreamReady={handleStreamReady}
-                isActive={isCameraActive}
-              />
-              {isCameraActive && (
-                <>
-                  <FaceDetection
-                    videoRef={videoRef}
-                    onFaceDetected={(detected) => {
-                      setIsFaceDetected(detected);
-                      if (detected) {
-                        setInstructionCompleted(true);
-                      }
-                    }}
+            <Button onClick={startCamera} className="w-full gap-2">
+              <Camera className="w-4 h-4" />
+              Start Live Photo Verification
+            </Button>
+
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+              if (!open) stopCamera();
+              setIsDialogOpen(open);
+            }}>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle>Live Photo Verification</DialogTitle>
+                </DialogHeader>
+                <div className="relative">
+                  <CameraFeed
+                    onStreamReady={handleStreamReady}
+                    isActive={isCameraActive}
                   />
-                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4">
-                    <p className="text-blue-400 font-semibold text-lg">
-                      {instructions[currentInstruction]}
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-            <h3 className="font-semibold">Live Photo Verification</h3>
-            <p className="text-sm text-gray-600">
-              Please follow the on-screen instructions
-            </p>
-            {!isCameraActive ? (
-              <Button onClick={startCamera} className="w-full gap-2">
-                Start Camera
-              </Button>
-            ) : (
-              <Button onClick={stopCamera} variant="outline" className="w-full">
-                Stop Camera
-              </Button>
-            )}
+                  {isCameraActive && (
+                    <>
+                      <FaceDetection
+                        videoRef={videoRef}
+                        onFaceDetected={(detected) => {
+                          setIsFaceDetected(detected);
+                          if (detected) {
+                            setInstructionCompleted(true);
+                          }
+                        }}
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4">
+                        <p className="text-blue-400 font-semibold text-lg">
+                          {instructions[currentInstruction]}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </>
         ) : (
           <div className="flex flex-col items-center gap-4">

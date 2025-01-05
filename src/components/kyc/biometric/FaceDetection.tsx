@@ -15,9 +15,9 @@ const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
     const loadModels = async () => {
       try {
         await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-          faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
-          faceapi.nets.faceExpressionNet.loadFromUri('/models')
+          faceapi.nets.tinyFaceDetector.loadFromUri('/models/tiny_face_detector_model-weights_manifest.json'),
+          faceapi.nets.faceLandmark68Net.loadFromUri('/models/face_landmark_68_model-weights_manifest.json'),
+          faceapi.nets.faceExpressionNet.loadFromUri('/models/face_expression_model-weights_manifest.json')
         ]);
         setIsModelLoaded(true);
         console.log("Face detection models loaded successfully");
@@ -52,7 +52,6 @@ const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
         onFaceDetected(hasFace);
 
         if (hasFace) {
-          // Additional checks can be added here for specific expressions or landmarks
           console.log("Face detected with expressions:", detections.expressions);
         }
 
