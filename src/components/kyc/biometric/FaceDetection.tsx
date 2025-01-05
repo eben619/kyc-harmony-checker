@@ -5,19 +5,21 @@ import { useToast } from "@/components/ui/use-toast";
 interface FaceDetectionProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   onFaceDetected: (detected: boolean) => void;
+  onHeadTurn: (turned: boolean) => void;
 }
 
-const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
+const FaceDetection = ({ videoRef, onFaceDetected, onHeadTurn }: FaceDetectionProps) => {
   const { toast } = useToast();
   const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const [lastNosePosition, setLastNosePosition] = useState<{ x: number, y: number } | null>(null);
 
   useEffect(() => {
     const loadModels = async () => {
       try {
         await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri('/models/tiny_face_detector_model-weights_manifest.json'),
-          faceapi.nets.faceLandmark68Net.loadFromUri('/models/face_landmark_68_model-weights_manifest.json'),
-          faceapi.nets.faceExpressionNet.loadFromUri('/models/face_expression_model-weights_manifest.json')
+          faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+          faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+          faceapi.nets.faceExpressionNet.loadFromUri('/models')
         ]);
         setIsModelLoaded(true);
         console.log("Face detection models loaded successfully");
@@ -45,14 +47,24 @@ const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
       try {
         const detections = await faceapi
           .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
-          .withFaceLandmarks()
-          .withFaceExpressions();
+          .withFaceLandmarks();
 
         const hasFace = !!detections;
         onFaceDetected(hasFace);
 
         if (hasFace) {
-          console.log("Face detected with expressions:", detections.expressions);
+          const nose = detections.landmarks.getNose()[0];
+          
+          if (lastNosePosition) {
+            const movement = Math.abs(nose.x - lastNosePosition.x);
+            const threshold = videoRef.current.videoWidth * 0.15; // 15% of video width
+            
+            if (movement > threshold) {
+              onHeadTurn(true);
+            }
+          }
+          
+          setLastNosePosition({ x: nose.x, y: nose.y });
         }
 
       } catch (error) {
@@ -69,7 +81,7 @@ const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [isModelLoaded, videoRef, onFaceDetected]);
+  }, [isModelLoaded, videoRef, onFaceDetected, onHeadTurn, lastNosePosition]);
 
   return null;
 };

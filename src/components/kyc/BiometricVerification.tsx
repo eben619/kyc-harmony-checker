@@ -30,14 +30,15 @@ const BiometricVerification = ({
     });
   };
 
-  const isComplete = formData.biometricData.fingerprintHash && formData.biometricData.livePhotoImage;
+  const isComplete = formData.biometricData.fingerprintHash && 
+                    formData.biometricData.livePhotoImage;
 
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="text-center mb-6">
         <h2 className="text-xl font-semibold">Biometric Verification</h2>
         <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Please complete both verifications
+          Please complete both verifications to continue
         </p>
       </div>
 
