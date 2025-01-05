@@ -26,7 +26,7 @@ const Account = () => {
 
       const { data: walletData, error } = await supabase
         .from("wallet_accounts")
-        .select("wallet_address, created_at")
+        .select("wallet_address")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -105,15 +105,6 @@ const Account = () => {
                 />
               )}
             </div>
-
-            {walletData?.created_at && (
-              <div>
-                <h3 className="font-medium mb-2">Wallet Connected On</h3>
-                <p className="text-muted-foreground">
-                  {new Date(walletData.created_at).toLocaleDateString()}
-                </p>
-              </div>
-            )}
 
             <div>
               <h3 className="font-medium mb-3">Verification Status</h3>
