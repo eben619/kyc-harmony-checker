@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
+import * as faceapi from 'face-api.js';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +15,6 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
   const { toast } = useToast();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const [faceLandmarker, setFaceLandmarker] = useState<FaceLandmarker | null>(null);
   const [currentInstruction, setCurrentInstruction] = useState(0);
   const [isFaceDetected, setIsFaceDetected] = useState(false);
 
@@ -27,24 +26,16 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
   ];
 
   useEffect(() => {
-    const initializeMediaPipe = async () => {
+    const loadModels = async () => {
       try {
-        const vision = await FilesetResolver.forVisionTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-        );
-        const landmarker = await FaceLandmarker.createFromOptions(vision, {
-          baseOptions: {
-            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-            delegate: "GPU"
-          },
-          outputFaceBlendshapes: true,
-          runningMode: "VIDEO",
-          numFaces: 1
-        });
-        setFaceLandmarker(landmarker);
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri("/models"),
+          faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+        ]);
         setIsInitialized(true);
+        console.log("Face detection models loaded successfully");
       } catch (error) {
-        console.error('Error initializing MediaPipe:', error);
+        console.error('Error loading face detection models:', error);
         toast({
           title: "Error",
           description: "Failed to initialize face detection. Please refresh the page.",
@@ -53,7 +44,7 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
       }
     };
 
-    initializeMediaPipe();
+    loadModels();
   }, []);
 
   const startCamera = async () => {
@@ -64,6 +55,7 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         setIsCameraActive(true);
+        console.log("Camera started successfully with facing mode: user");
       }
     } catch (error) {
       toast({
@@ -84,12 +76,15 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
   };
 
   const captureAndVerify = async () => {
-    if (!videoRef.current || !faceLandmarker) return;
+    if (!videoRef.current) return;
 
     try {
-      const results = faceLandmarker.detectForVideo(videoRef.current, Date.now());
+      const detections = await faceapi.detectSingleFace(
+        videoRef.current,
+        new faceapi.TinyFaceDetectorOptions()
+      );
       
-      if (results.faceLandmarks.length > 0) {
+      if (detections) {
         const canvas = document.createElement('canvas');
         canvas.width = videoRef.current.videoWidth;
         canvas.height = videoRef.current.videoHeight;
@@ -147,9 +142,12 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
     let animationFrameId: number;
 
     const checkFaceDetection = async () => {
-      if (isCameraActive && videoRef.current && faceLandmarker) {
-        const results = faceLandmarker.detectForVideo(videoRef.current, Date.now());
-        setIsFaceDetected(results.faceLandmarks.length > 0);
+      if (isCameraActive && videoRef.current) {
+        const detections = await faceapi.detectSingleFace(
+          videoRef.current,
+          new faceapi.TinyFaceDetectorOptions()
+        );
+        setIsFaceDetected(!!detections);
       }
       animationFrameId = requestAnimationFrame(checkFaceDetection);
     };
@@ -164,7 +162,7 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
       }
       stopCamera();
     };
-  }, [isCameraActive, faceLandmarker]);
+  }, [isCameraActive]);
 
   if (!isInitialized) {
     return <div className="text-center p-4">Initializing face detection...</div>;
