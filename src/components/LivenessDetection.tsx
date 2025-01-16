@@ -17,6 +17,7 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [faceLandmarker, setFaceLandmarker] = useState<FaceLandmarker | null>(null);
   const [currentInstruction, setCurrentInstruction] = useState(0);
+  const [isFaceDetected, setIsFaceDetected] = useState(false);
 
   const instructions = [
     "Look directly at the camera",
@@ -143,10 +144,27 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
   };
 
   useEffect(() => {
+    let animationFrameId: number;
+
+    const checkFaceDetection = async () => {
+      if (isCameraActive && videoRef.current && faceLandmarker) {
+        const results = faceLandmarker.detectForVideo(videoRef.current, Date.now());
+        setIsFaceDetected(results.faceLandmarks.length > 0);
+      }
+      animationFrameId = requestAnimationFrame(checkFaceDetection);
+    };
+
+    if (isCameraActive) {
+      checkFaceDetection();
+    }
+
     return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
       stopCamera();
     };
-  }, []);
+  }, [isCameraActive, faceLandmarker]);
 
   if (!isInitialized) {
     return <div className="text-center p-4">Initializing face detection...</div>;
@@ -156,7 +174,7 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
     <Card className="p-6 space-y-4">
       <div className="text-center mb-4">
         <h3 className="text-lg font-semibold mb-2">Face Verification</h3>
-        <p className="text-sm text-muted-foreground">
+        <p className={`text-sm ${isFaceDetected ? 'text-green-500' : 'text-muted-foreground'}`}>
           {instructions[currentInstruction]}
         </p>
       </div>
