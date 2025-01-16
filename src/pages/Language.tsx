@@ -1,8 +1,6 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import {
   Select,
   SelectContent,
@@ -16,6 +14,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface FAQ {
@@ -29,10 +28,16 @@ interface Language {
   name: string;
 }
 
+interface Translation {
+  key: string;
+  value: string;
+}
+
 const Language = () => {
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [languages, setLanguages] = useState<Language[]>([]);
   const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [translations, setTranslations] = useState<Record<string, string>>({});
   const [openItems, setOpenItems] = useState<number[]>([]);
   const { toast } = useToast();
 
@@ -42,6 +47,7 @@ const Language = () => {
 
   useEffect(() => {
     fetchFAQs();
+    fetchTranslations();
   }, [selectedLanguage]);
 
   const fetchLanguages = async () => {
@@ -50,64 +56,65 @@ const Language = () => {
         .from("languages")
         .select("code, name");
       
-      if (error) {
-        console.error("Error fetching languages:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch available languages",
-          variant: "destructive",
-        });
-        return;
-      }
-      
+      if (error) throw error;
       setLanguages(data || []);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error fetching languages:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch available languages",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchTranslations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("page_translations")
+        .select("key, value")
+        .eq("language_code", selectedLanguage);
+
+      if (error) throw error;
+
+      const translationsMap = (data || []).reduce((acc: Record<string, string>, curr: Translation) => {
+        acc[curr.key] = curr.value;
+        return acc;
+      }, {});
+
+      setTranslations(translationsMap);
+    } catch (error) {
+      console.error("Error fetching translations:", error);
     }
   };
 
   const fetchFAQs = async () => {
     try {
-      // First try to get translated content
       const { data: translatedFaqs, error: translationError } = await supabase
         .from("faq_translations")
         .select("id, question, answer")
         .eq("language_code", selectedLanguage);
 
-      if (translationError) {
-        console.error("Error fetching translations:", translationError);
-        toast({
-          title: "Error",
-          description: "Failed to fetch translated content",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (translationError) throw translationError;
 
-      // If translations exist, use them
       if (translatedFaqs && translatedFaqs.length > 0) {
         setFaqs(translatedFaqs);
         return;
       }
 
-      // If no translations found, fallback to default English FAQs
       const { data: defaultFaqs, error: faqError } = await supabase
         .from("faqs")
         .select("id, question, answer");
 
-      if (faqError) {
-        console.error("Error fetching default FAQs:", faqError);
-        toast({
-          title: "Error",
-          description: "Failed to fetch FAQ content",
-          variant: "destructive",
-        });
-        return;
-      }
-
+      if (faqError) throw faqError;
       setFaqs(defaultFaqs || []);
     } catch (error) {
       console.error("Error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch FAQ content",
+        variant: "destructive",
+      });
     }
   };
 
@@ -123,23 +130,25 @@ const Language = () => {
     setSelectedLanguage(language);
     localStorage.setItem("preferredLanguage", language);
     toast({
-      title: "Language Updated",
-      description: `Your language preference has been saved.`,
+      title: translations.language_updated || "Language Updated",
+      description: translations.language_preference_saved || "Your language preference has been saved.",
     });
   };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-4">FAQ & Terms</h1>
+        <h1 className="text-2xl font-bold mb-4">
+          {translations.faq_title || "FAQ & Terms"}
+        </h1>
         <div className="flex items-end gap-4 mb-6">
           <div className="flex-1">
             <Label htmlFor="language" className="mb-2 block">
-              Select Language
+              {translations.select_language || "Select Language"}
             </Label>
             <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
               <SelectTrigger>
-                <SelectValue placeholder="Select language" />
+                <SelectValue placeholder={translations.select_language || "Select language"} />
               </SelectTrigger>
               <SelectContent>
                 {languages.map((language) => (

@@ -138,6 +138,38 @@ export type Database = {
         }
         Relationships: []
       }
+      page_translations: {
+        Row: {
+          created_at: string
+          id: number
+          key: string
+          language_code: string | null
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          key: string
+          language_code?: string | null
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          key?: string
+          language_code?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_translations_language_code_fkey"
+            columns: ["language_code"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       tax_forms: {
         Row: {
           applicable_countries: string[]
