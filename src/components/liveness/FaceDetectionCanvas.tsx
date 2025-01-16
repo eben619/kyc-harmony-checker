@@ -1,9 +1,19 @@
 import React, { useRef, useEffect } from 'react';
-import { DeepFace } from 'deepface';
+// Import as a module with any type to avoid TypeScript errors
+import * as deepface from 'deepface';
 
 interface FaceDetectionCanvasProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   onFaceDetected: (detected: boolean) => void;
+}
+
+interface DetectionResult {
+  box: {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  };
 }
 
 const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasProps) => {
@@ -26,13 +36,23 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
 
         // Capture current frame
         context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-        const imageData = context.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height);
+        
+        // Convert canvas to blob for DeepFace
+        const blob = await new Promise<Blob>((resolve) => 
+          canvasRef.current!.toBlob((b) => resolve(b!), 'image/jpeg')
+        );
+
+        // Create a temporary URL for the blob
+        const imageUrl = URL.createObjectURL(blob);
 
         // Detect face using DeepFace
-        const result = await DeepFace.detectFace(imageData);
+        const result = await (deepface as any).detectFace(imageUrl) as DetectionResult[];
         const faceDetected = result && result.length > 0;
         
         onFaceDetected(faceDetected);
+
+        // Clean up the temporary URL
+        URL.revokeObjectURL(imageUrl);
 
         // Draw detection rectangle if face is detected
         context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
@@ -45,6 +65,7 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
 
       } catch (error) {
         console.error('Face detection error:', error);
+        onFaceDetected(false);
       } finally {
         isProcessing = false;
         animationFrameId = requestAnimationFrame(detectFace);
