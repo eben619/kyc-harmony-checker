@@ -1,9 +1,12 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as faceapi from 'face-api.js';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from "@/components/ui/card";
+import CameraFeed from './liveness/CameraFeed';
+import FaceDetectionCanvas from './liveness/FaceDetectionCanvas';
+import InstructionsDisplay from './liveness/InstructionsDisplay';
 
 interface LivenessDetectionProps {
   userId: string;
@@ -11,12 +14,12 @@ interface LivenessDetectionProps {
 }
 
 export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [currentInstruction, setCurrentInstruction] = useState(0);
   const [isFaceDetected, setIsFaceDetected] = useState(false);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
 
   const instructions = [
     "Look directly at the camera",
@@ -47,29 +50,17 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
     loadModels();
   }, []);
 
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" }
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setIsCameraActive(true);
-        console.log("Camera started successfully with facing mode: user");
-      }
-    } catch (error) {
-      toast({
-        title: "Camera Error",
-        description: "Unable to access camera. Please ensure camera permissions are granted.",
-        variant: "destructive"
-      });
+  const handleStreamReady = (stream: MediaStream) => {
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      setIsCameraActive(true);
     }
   };
 
   const stopCamera = () => {
     if (videoRef.current?.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-      tracks.forEach(track => track.stop());
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
       videoRef.current.srcObject = null;
       setIsCameraActive(false);
     }
@@ -79,55 +70,42 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
     if (!videoRef.current) return;
 
     try {
-      const detections = await faceapi.detectSingleFace(
-        videoRef.current,
-        new faceapi.TinyFaceDetectorOptions()
-      );
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.drawImage(videoRef.current, 0, 0);
+      const blob = await new Promise<Blob>((resolve) => canvas.toBlob(resolve!, 'image/jpeg'));
       
-      if (detections) {
-        const canvas = document.createElement('canvas');
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+      const fileName = `liveness-${userId}-${Date.now()}.jpg`;
+      const { error: uploadError } = await supabase.storage
+        .from('biometric_data')
+        .upload(fileName, blob);
 
-        ctx.drawImage(videoRef.current, 0, 0);
-        const blob = await new Promise<Blob>((resolve) => canvas.toBlob(resolve!, 'image/jpeg'));
-        
-        const fileName = `liveness-${userId}-${Date.now()}.jpg`;
-        const { error: uploadError } = await supabase.storage
-          .from('biometric_data')
-          .upload(fileName, blob);
+      if (uploadError) throw uploadError;
 
-        if (uploadError) throw uploadError;
+      await supabase
+        .from('kyc_verifications')
+        .update({
+          biometric_steps: {
+            face_detected: true,
+            blink_detected: true,
+            smile_detected: true,
+            head_turn_detected: true
+          },
+          liveness_score: 1.0
+        })
+        .eq('user_id', userId);
 
-        await supabase
-          .from('kyc_verifications')
-          .update({
-            biometric_steps: {
-              face_detected: true,
-              blink_detected: true,
-              smile_detected: true,
-              head_turn_detected: true
-            },
-            liveness_score: 1.0
-          })
-          .eq('user_id', userId);
-
-        stopCamera();
-        onComplete();
-        
-        toast({
-          title: "Success",
-          description: "Face verification completed successfully!",
-        });
-      } else {
-        toast({
-          title: "No Face Detected",
-          description: "Please ensure your face is clearly visible in the camera.",
-          variant: "destructive"
-        });
-      }
+      stopCamera();
+      onComplete();
+      
+      toast({
+        title: "Success",
+        description: "Face verification completed successfully!",
+      });
     } catch (error) {
       console.error('Verification error:', error);
       toast({
@@ -138,57 +116,36 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
     }
   };
 
-  useEffect(() => {
-    let animationFrameId: number;
-
-    const checkFaceDetection = async () => {
-      if (isCameraActive && videoRef.current) {
-        const detections = await faceapi.detectSingleFace(
-          videoRef.current,
-          new faceapi.TinyFaceDetectorOptions()
-        );
-        setIsFaceDetected(!!detections);
-      }
-      animationFrameId = requestAnimationFrame(checkFaceDetection);
-    };
-
-    if (isCameraActive) {
-      checkFaceDetection();
-    }
-
-    return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-      stopCamera();
-    };
-  }, [isCameraActive]);
-
   if (!isInitialized) {
     return <div className="text-center p-4">Initializing face detection...</div>;
   }
 
   return (
     <Card className="p-6 space-y-4">
-      <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold mb-2">Face Verification</h3>
-        <p className={`text-sm ${isFaceDetected ? 'text-green-500' : 'text-muted-foreground'}`}>
-          {instructions[currentInstruction]}
-        </p>
-      </div>
+      <InstructionsDisplay
+        currentInstruction={currentInstruction}
+        isFaceDetected={isFaceDetected}
+        instructions={instructions}
+      />
 
       <div className="relative aspect-video w-full max-w-xl mx-auto bg-gray-100 rounded-lg overflow-hidden">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          className="w-full h-full object-cover"
-        />
+        {isCameraActive && (
+          <>
+            <CameraFeed
+              onStreamReady={handleStreamReady}
+              isActive={isCameraActive}
+            />
+            <FaceDetectionCanvas
+              videoRef={videoRef}
+              onFaceDetected={setIsFaceDetected}
+            />
+          </>
+        )}
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-center sm:gap-4">
         {!isCameraActive ? (
-          <Button onClick={startCamera} className="w-full sm:w-auto">
+          <Button onClick={() => setIsCameraActive(true)} className="w-full sm:w-auto">
             Start Camera
           </Button>
         ) : (
@@ -203,6 +160,7 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
             <Button 
               onClick={captureAndVerify}
               className="w-full sm:w-auto"
+              disabled={!isFaceDetected}
             >
               Complete Verification
             </Button>
