@@ -7,18 +7,17 @@ interface FaceDetectionCanvasProps {
   onFaceDetected: (detected: boolean) => void;
 }
 
-type FaceDetector = faceDetection.FaceDetector;
-type DetectorConfig = {
+interface DetectorConfig {
   runtime: 'tfjs';
   maxFaces: number;
   modelType: 'short' | 'full';
-};
+}
 
 const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    let detector: FaceDetector | null = null;
+    let detector: faceDetection.FaceDetector | null = null;
     let animationFrameId: number | undefined;
     let isProcessing = false;
 
