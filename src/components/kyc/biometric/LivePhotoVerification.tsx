@@ -24,19 +24,8 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
   const [isCapturing, setIsCapturing] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isFaceDetected, setIsFaceDetected] = useState(false);
-  const [currentInstruction, setCurrentInstruction] = useState(0);
-  const [instructionCompleted, setInstructionCompleted] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const instructionTimeout = useRef<NodeJS.Timeout>();
-
-  const instructions = [
-    "Blink your eyes slowly",
-    "Open your mouth slightly",
-    "Turn your head to the left",
-    "Turn your head to the right",
-    "Nod your head up and down",
-  ];
 
   const handleStreamReady = (stream: MediaStream) => {
     if (videoRef.current) {
@@ -51,7 +40,7 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
 
     try {
       setIsCapturing(true);
-      console.log(`Capturing photo for instruction: ${instructions[currentInstruction]}`);
+      console.log("Capturing live photo");
 
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth;
@@ -62,25 +51,20 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
       context.drawImage(videoRef.current, 0, 0);
       const blob = await new Promise<Blob>((resolve) => canvas.toBlob(blob => resolve(blob!), 'image/jpeg'));
       
-      const fileName = `live-${Date.now()}-${currentInstruction}.jpg`;
+      const fileName = `live-${Date.now()}.jpg`;
       const { error: uploadError } = await supabase.storage
         .from('biometric_data')
         .upload(`${fileName}`, blob);
 
       if (uploadError) throw uploadError;
 
-      if (currentInstruction === instructions.length - 1) {
-        onCapture({ livePhotoImage: fileName });
-        stopCamera();
-        setIsDialogOpen(false);
-        toast({
-          title: "Success",
-          description: "Live photo verification completed successfully",
-        });
-      } else {
-        setCurrentInstruction(prev => prev + 1);
-        setInstructionCompleted(false);
-      }
+      onCapture({ livePhotoImage: fileName });
+      stopCamera();
+      setIsDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Live photo verification completed successfully",
+      });
     } catch (error) {
       console.error('Live photo capture error:', error);
       toast({
@@ -92,19 +76,6 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
       setIsCapturing(false);
     }
   };
-
-  useEffect(() => {
-    if (instructionCompleted && isFaceDetected) {
-      instructionTimeout.current = setTimeout(() => {
-        captureAndProceed();
-      }, 1000);
-    }
-    return () => {
-      if (instructionTimeout.current) {
-        clearTimeout(instructionTimeout.current);
-      }
-    };
-  }, [instructionCompleted, isFaceDetected]);
 
   const startCamera = () => {
     setIsDialogOpen(true);
@@ -125,6 +96,10 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
       <div className="text-center space-y-4">
         {!biometricData.livePhotoImage ? (
           <>
+            <div className="w-32 h-32 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+              <Camera className={`w-16 h-16 ${isCameraActive ? 'text-primary animate-pulse' : 'text-gray-400'}`} />
+            </div>
+            
             <Button onClick={startCamera} className="w-full gap-2">
               <Camera className="w-4 h-4" />
               Start Live Photo Verification
@@ -147,21 +122,23 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
                     <>
                       <FaceDetection
                         videoRef={videoRef}
-                        onFaceDetected={(detected) => {
-                          setIsFaceDetected(detected);
-                          if (detected) {
-                            setInstructionCompleted(true);
-                          }
-                        }}
+                        onFaceDetected={setIsFaceDetected}
                       />
                       <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4">
-                        <p className="text-blue-400 font-semibold text-lg">
-                          {instructions[currentInstruction]}
+                        <p className="text-white font-semibold text-lg">
+                          Turn your head slowly sideways
                         </p>
                       </div>
                     </>
                   )}
                 </div>
+                <Button 
+                  onClick={captureAndProceed}
+                  disabled={!isFaceDetected}
+                  className="w-full mt-4"
+                >
+                  {isCapturing ? "Capturing..." : "Capture Photo"}
+                </Button>
               </DialogContent>
             </Dialog>
           </>
