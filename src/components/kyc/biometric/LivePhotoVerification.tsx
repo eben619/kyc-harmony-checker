@@ -24,6 +24,7 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
   const [isCapturing, setIsCapturing] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isFaceDetected, setIsFaceDetected] = useState(false);
+  const [isHeadTurned, setIsHeadTurned] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -36,7 +37,7 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
   };
 
   const captureAndProceed = async () => {
-    if (!videoRef.current || !isFaceDetected) return;
+    if (!videoRef.current || !isFaceDetected || !isHeadTurned) return;
 
     try {
       setIsCapturing(true);
@@ -123,9 +124,10 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
                       <FaceDetection
                         videoRef={videoRef}
                         onFaceDetected={setIsFaceDetected}
+                        onHeadTurn={setIsHeadTurned}
                       />
-                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4">
-                        <p className="text-white font-semibold text-lg">
+                      <div className="absolute inset-x-0 bottom-0 bg-black/50 p-4">
+                        <p className="text-white font-semibold text-center text-lg">
                           Turn your head slowly sideways
                         </p>
                       </div>
@@ -134,7 +136,7 @@ const LivePhotoVerification = ({ biometricData, onCapture }: LivePhotoVerificati
                 </div>
                 <Button 
                   onClick={captureAndProceed}
-                  disabled={!isFaceDetected}
+                  disabled={!isFaceDetected || !isHeadTurned || isCapturing}
                   className="w-full mt-4"
                 >
                   {isCapturing ? "Capturing..." : "Capture Photo"}

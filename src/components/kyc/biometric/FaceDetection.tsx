@@ -1,62 +1,75 @@
 import { useState, useEffect } from 'react';
-import * as faceapi from 'face-api.js';
-import { useToast } from "@/components/ui/use-toast";
+import { FaceDetector, FilesetResolver } from '@mediapipe/tasks-vision';
 
 interface FaceDetectionProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   onFaceDetected: (detected: boolean) => void;
+  onHeadTurn: (turned: boolean) => void;
 }
 
-const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
-  const { toast } = useToast();
-  const [isModelLoaded, setIsModelLoaded] = useState(false);
+const FaceDetection = ({ videoRef, onFaceDetected, onHeadTurn }: FaceDetectionProps) => {
+  const [detector, setDetector] = useState<FaceDetector | null>(null);
+  const [lastXPosition, setLastXPosition] = useState<number | null>(null);
 
   useEffect(() => {
-    const loadModels = async () => {
+    const initializeDetector = async () => {
       try {
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.load('/models'),
-          faceapi.nets.faceLandmark68Net.load('/models'),
-          faceapi.nets.faceExpressionNet.load('/models')
-        ]);
-        setIsModelLoaded(true);
-        console.log("Face detection models loaded successfully");
-      } catch (error) {
-        console.error('Error loading face detection models:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load face detection models. Please refresh the page.",
-          variant: "destructive",
+        const vision = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+        );
+        
+        const faceDetector = await FaceDetector.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite",
+            delegate: "GPU"
+          },
+          runningMode: "VIDEO"
         });
+        
+        setDetector(faceDetector);
+        console.log("Face detection model loaded successfully");
+      } catch (error) {
+        console.error('Error initializing face detector:', error);
       }
     };
 
-    loadModels();
-  }, [toast]);
+    initializeDetector();
+  }, []);
 
   useEffect(() => {
-    if (!isModelLoaded || !videoRef.current) return;
+    if (!detector || !videoRef.current) return;
 
     let animationFrameId: number;
+    let lastDetectionTime = 0;
+    const detectionInterval = 100; // Detect every 100ms
 
     const detectFace = async () => {
-      if (!videoRef.current) return;
+      if (!videoRef.current || !detector) return;
 
-      try {
-        const detections = await faceapi
-          .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
-          .withFaceLandmarks()
-          .withFaceExpressions();
+      const now = Date.now();
+      if (now - lastDetectionTime >= detectionInterval) {
+        try {
+          const detections = detector.detectForVideo(videoRef.current, now);
+          const facePresent = detections.detections.length > 0;
+          onFaceDetected(facePresent);
 
-        const hasFace = !!detections;
-        onFaceDetected(hasFace);
+          if (facePresent) {
+            const face = detections.detections[0];
+            const currentX = face.boundingBox.originX;
 
-        if (hasFace) {
-          console.log("Face detected with expressions:", detections.expressions);
+            if (lastXPosition !== null) {
+              const movement = Math.abs(currentX - lastXPosition);
+              // Detect significant horizontal movement
+              if (movement > 50) {
+                onHeadTurn(true);
+              }
+            }
+            setLastXPosition(currentX);
+          }
+        } catch (error) {
+          console.error('Face detection error:', error);
         }
-
-      } catch (error) {
-        console.error('Face detection error:', error);
+        lastDetectionTime = now;
       }
 
       animationFrameId = requestAnimationFrame(detectFace);
@@ -69,7 +82,7 @@ const FaceDetection = ({ videoRef, onFaceDetected }: FaceDetectionProps) => {
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [isModelLoaded, videoRef, onFaceDetected]);
+  }, [detector, videoRef, onFaceDetected, onHeadTurn, lastXPosition]);
 
   return null;
 };
