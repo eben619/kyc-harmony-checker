@@ -1,19 +1,10 @@
 import React, { useRef, useEffect } from 'react';
-// Import as a module with any type to avoid TypeScript errors
-import * as deepface from 'deepface';
+import * as tf from '@tensorflow/tfjs';
+import * as blazeface from '@tensorflow-models/blazeface';
 
 interface FaceDetectionCanvasProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   onFaceDetected: (detected: boolean) => void;
-}
-
-interface DetectionResult {
-  box: {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-  };
 }
 
 const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasProps) => {
@@ -21,10 +12,20 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
 
   useEffect(() => {
     let animationFrameId: number;
+    let model: blazeface.BlazeFaceModel | null = null;
     let isProcessing = false;
 
+    const loadModel = async () => {
+      try {
+        model = await blazeface.load();
+        console.log("BlazeFace model loaded successfully");
+      } catch (error) {
+        console.error("Error loading BlazeFace model:", error);
+      }
+    };
+
     const detectFace = async () => {
-      if (!videoRef.current || !canvasRef.current || isProcessing) {
+      if (!videoRef.current || !canvasRef.current || !model || isProcessing) {
         animationFrameId = requestAnimationFrame(detectFace);
         return;
       }
@@ -34,33 +35,28 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
         const context = canvasRef.current.getContext('2d');
         if (!context) return;
 
-        // Capture current frame
-        context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-        
-        // Convert canvas to blob for DeepFace
-        const blob = await new Promise<Blob>((resolve) => 
-          canvasRef.current!.toBlob((b) => resolve(b!), 'image/jpeg')
-        );
+        // Clear previous drawings
+        context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
-        // Create a temporary URL for the blob
-        const imageUrl = URL.createObjectURL(blob);
+        // Get video frame as tensor
+        const videoTensor = tf.browser.fromPixels(videoRef.current);
+        const predictions = await model.estimateFaces(videoTensor, false);
+        videoTensor.dispose(); // Clean up tensor
 
-        // Detect face using DeepFace
-        const result = await (deepface as any).detectFace(imageUrl) as DetectionResult[];
-        const faceDetected = result && result.length > 0;
-        
+        const faceDetected = predictions.length > 0;
         onFaceDetected(faceDetected);
 
-        // Clean up the temporary URL
-        URL.revokeObjectURL(imageUrl);
+        // Draw detection boxes
+        if (faceDetected) {
+          predictions.forEach((prediction) => {
+            const start = prediction.topLeft as [number, number];
+            const end = prediction.bottomRight as [number, number];
+            const size = [end[0] - start[0], end[1] - start[1]];
 
-        // Draw detection rectangle if face is detected
-        context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        if (faceDetected && result[0].box) {
-          const { x, y, w, h } = result[0].box;
-          context.strokeStyle = '#00ff00';
-          context.lineWidth = 2;
-          context.strokeRect(x, y, w, h);
+            context.strokeStyle = '#00ff00';
+            context.lineWidth = 2;
+            context.strokeRect(start[0], start[1], size[0], size[1]);
+          });
         }
 
       } catch (error) {
@@ -72,11 +68,17 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
       }
     };
 
-    detectFace();
+    loadModel().then(() => {
+      detectFace();
+    });
 
     return () => {
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
+      }
+      if (model) {
+        // Clean up any tensors
+        tf.dispose();
       }
     };
   }, [videoRef, onFaceDetected]);
