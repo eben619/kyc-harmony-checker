@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react';
-import * as faceapi from 'face-api.js';
+import React, { useRef, useEffect } from 'react';
+import { DeepFace } from 'deepface';
 
 interface FaceDetectionCanvasProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -11,39 +11,44 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
 
   useEffect(() => {
     let animationFrameId: number;
+    let isProcessing = false;
 
     const detectFace = async () => {
-      if (!videoRef.current || !canvasRef.current) return;
-
-      try {
-        const detections = await faceapi.detectSingleFace(
-          videoRef.current,
-          new faceapi.TinyFaceDetectorOptions()
-        );
-
-        const detected = !!detections;
-        onFaceDetected(detected);
-
-        // Draw detection rectangle if face is detected
-        const context = canvasRef.current.getContext('2d');
-        if (context) {
-          context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-          if (detected && detections) {
-            context.strokeStyle = '#00ff00';
-            context.lineWidth = 2;
-            context.strokeRect(
-              detections.box.x,
-              detections.box.y,
-              detections.box.width,
-              detections.box.height
-            );
-          }
-        }
-      } catch (error) {
-        console.error('Face detection error:', error);
+      if (!videoRef.current || !canvasRef.current || isProcessing) {
+        animationFrameId = requestAnimationFrame(detectFace);
+        return;
       }
 
-      animationFrameId = requestAnimationFrame(detectFace);
+      try {
+        isProcessing = true;
+        const context = canvasRef.current.getContext('2d');
+        if (!context) return;
+
+        // Capture current frame
+        context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+        const imageData = context.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height);
+
+        // Detect face using DeepFace
+        const result = await DeepFace.detectFace(imageData);
+        const faceDetected = result && result.length > 0;
+        
+        onFaceDetected(faceDetected);
+
+        // Draw detection rectangle if face is detected
+        context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        if (faceDetected && result[0].box) {
+          const { x, y, w, h } = result[0].box;
+          context.strokeStyle = '#00ff00';
+          context.lineWidth = 2;
+          context.strokeRect(x, y, w, h);
+        }
+
+      } catch (error) {
+        console.error('Face detection error:', error);
+      } finally {
+        isProcessing = false;
+        animationFrameId = requestAnimationFrame(detectFace);
+      }
     };
 
     detectFace();

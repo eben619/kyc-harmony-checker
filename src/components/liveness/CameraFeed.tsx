@@ -47,7 +47,7 @@ const CameraFeed = ({ onStreamReady, isActive }: CameraFeedProps) => {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [isActive, onStreamReady]);
+  }, [isActive, onStreamReady, toast]);
 
   return (
     <video
