@@ -1,17 +1,10 @@
 import React, { useRef, useEffect } from 'react';
 import * as tf from '@tensorflow/tfjs';
-import * as blazeface from '@tensorflow-models/blazeface';
+import * as faceDetection from '@tensorflow-models/face-detection';
 
 interface FaceDetectionCanvasProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   onFaceDetected: (detected: boolean) => void;
-}
-
-type BlazeFacePrediction = {
-  topLeft: [number, number];
-  bottomRight: [number, number];
-  probability: number;
-  landmarks: Array<[number, number]>;
 }
 
 const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasProps) => {
@@ -19,20 +12,27 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
 
   useEffect(() => {
     let animationFrameId: number | undefined;
-    let model: blazeface.BlazeFaceModel | null = null;
+    let detector: faceDetection.FaceDetector | null = null;
     let isProcessing = false;
 
     const loadModel = async () => {
       try {
-        model = await blazeface.load();
+        const model = faceDetection.SupportedModels.MediaPipeFaceDetector;
+        const detectorConfig = {
+          runtime: 'tfjs',
+          maxFaces: 1,
+          modelType: 'short'
+        } as const;
+        
+        detector = await faceDetection.createDetector(model, detectorConfig);
         console.log("Face detection model loaded successfully");
       } catch (error) {
-        console.error("Error loading BlazeFace model:", error);
+        console.error("Error loading face detection model:", error);
       }
     };
 
     const detectFace = async () => {
-      if (!videoRef.current || !canvasRef.current || !model || isProcessing) {
+      if (!videoRef.current || !canvasRef.current || !detector || isProcessing) {
         animationFrameId = requestAnimationFrame(detectFace);
         return;
       }
@@ -45,25 +45,23 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
         // Clear previous drawings
         context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
-        // Get video frame as tensor
-        const videoTensor = tf.browser.fromPixels(videoRef.current);
-        const predictions = await model.estimateFaces(videoTensor, false) as BlazeFacePrediction[];
-        videoTensor.dispose(); // Clean up tensor
-
-        const faceDetected = predictions.length > 0;
+        // Detect faces
+        const faces = await detector.estimateFaces(videoRef.current);
+        const faceDetected = faces.length > 0;
         onFaceDetected(faceDetected);
 
         // Draw detection boxes
         if (faceDetected) {
-          predictions.forEach((prediction: BlazeFacePrediction) => {
-            const [x1, y1] = prediction.topLeft;
-            const [x2, y2] = prediction.bottomRight;
-            const width = x2 - x1;
-            const height = y2 - y1;
-
+          faces.forEach((face) => {
+            const box = face.box;
             context.strokeStyle = '#00ff00';
             context.lineWidth = 2;
-            context.strokeRect(x1, y1, width, height);
+            context.strokeRect(
+              box.xMin,
+              box.yMin,
+              box.width,
+              box.height
+            );
           });
         }
 
@@ -84,8 +82,8 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
       }
-      if (model) {
-        // Clean up any tensors
+      // Clean up TensorFlow resources
+      if (detector) {
         tf.dispose();
       }
     };
