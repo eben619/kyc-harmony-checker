@@ -17,13 +17,13 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
   const [isCapturing, setIsCapturing] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isFaceDetected, setIsFaceDetected] = useState(false);
+  const [isHeadTurned, setIsHeadTurned] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentInstruction, setCurrentInstruction] = useState(0);
 
   const instructions = [
     "Look straight at the camera",
-    "Slowly turn your head left",
-    "Slowly turn your head right",
+    "Slowly turn your head left and right",
     "Smile naturally",
   ];
 
@@ -120,8 +120,9 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
                   <FaceDetection
                     videoRef={videoRef}
                     onFaceDetected={setIsFaceDetected}
+                    onHeadTurn={setIsHeadTurned}
                   />
-                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2">
+                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-center">
                     {instructions[currentInstruction]}
                   </div>
                 </>
@@ -153,7 +154,7 @@ const FaceVerification = ({ biometricData, onCapture }: FaceVerificationProps) =
                 </Button>
                 <Button
                   onClick={handleFaceCapture}
-                  disabled={isCapturing || !isFaceDetected}
+                  disabled={isCapturing || !isFaceDetected || !isHeadTurned}
                   className="w-full"
                 >
                   {isCapturing ? "Capturing..." : "Capture"}

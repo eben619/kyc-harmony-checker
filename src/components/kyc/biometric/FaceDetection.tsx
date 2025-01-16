@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaceDetector, FilesetResolver } from '@mediapipe/tasks-vision';
+import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 
 interface FaceDetectionProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -8,7 +8,7 @@ interface FaceDetectionProps {
 }
 
 const FaceDetection = ({ videoRef, onFaceDetected, onHeadTurn }: FaceDetectionProps) => {
-  const [detector, setDetector] = useState<FaceDetector | null>(null);
+  const [detector, setDetector] = useState<FaceLandmarker | null>(null);
   const [lastXPosition, setLastXPosition] = useState<number | null>(null);
 
   useEffect(() => {
@@ -18,15 +18,17 @@ const FaceDetection = ({ videoRef, onFaceDetected, onHeadTurn }: FaceDetectionPr
           "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
         );
         
-        const faceDetector = await FaceDetector.createFromOptions(vision, {
+        const faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
           baseOptions: {
-            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite",
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
             delegate: "GPU"
           },
-          runningMode: "VIDEO"
+          outputFaceBlendshapes: true,
+          runningMode: "VIDEO",
+          numFaces: 1
         });
         
-        setDetector(faceDetector);
+        setDetector(faceLandmarker);
         console.log("Face detection model loaded successfully");
       } catch (error) {
         console.error('Error initializing face detector:', error);
@@ -49,22 +51,23 @@ const FaceDetection = ({ videoRef, onFaceDetected, onHeadTurn }: FaceDetectionPr
       const now = Date.now();
       if (now - lastDetectionTime >= detectionInterval) {
         try {
-          const detections = detector.detectForVideo(videoRef.current, now);
-          const facePresent = detections.detections.length > 0;
+          const results = detector.detectForVideo(videoRef.current, now);
+          const facePresent = results.faceLandmarks.length > 0;
           onFaceDetected(facePresent);
 
           if (facePresent) {
-            const face = detections.detections[0];
-            const currentX = face.boundingBox.originX;
+            // Calculate the average x position of face landmarks
+            const xPositions = results.faceLandmarks[0].map(landmark => landmark.x);
+            const avgX = xPositions.reduce((a, b) => a + b, 0) / xPositions.length;
 
             if (lastXPosition !== null) {
-              const movement = Math.abs(currentX - lastXPosition);
-              // Detect significant horizontal movement
-              if (movement > 50) {
+              const movement = Math.abs(avgX - lastXPosition);
+              // Detect significant horizontal movement (threshold can be adjusted)
+              if (movement > 0.15) { // 15% movement threshold
                 onHeadTurn(true);
               }
             }
-            setLastXPosition(currentX);
+            setLastXPosition(avgX);
           }
         } catch (error) {
           console.error('Face detection error:', error);
