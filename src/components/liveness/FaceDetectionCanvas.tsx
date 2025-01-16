@@ -7,7 +7,7 @@ interface FaceDetectionCanvasProps {
   onFaceDetected: (detected: boolean) => void;
 }
 
-interface FacePrediction {
+type BlazeFacePrediction = {
   topLeft: [number, number];
   bottomRight: [number, number];
   probability: number;
@@ -18,7 +18,7 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    let animationFrameId: number;
+    let animationFrameId: number | undefined;
     let model: blazeface.BlazeFaceModel | null = null;
     let isProcessing = false;
 
@@ -47,7 +47,7 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
 
         // Get video frame as tensor
         const videoTensor = tf.browser.fromPixels(videoRef.current);
-        const predictions = await model.estimateFaces(videoTensor, false) as FacePrediction[];
+        const predictions = await model.estimateFaces(videoTensor, false) as BlazeFacePrediction[];
         videoTensor.dispose(); // Clean up tensor
 
         const faceDetected = predictions.length > 0;
@@ -55,7 +55,7 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
 
         // Draw detection boxes
         if (faceDetected) {
-          predictions.forEach((prediction: FacePrediction) => {
+          predictions.forEach((prediction: BlazeFacePrediction) => {
             const [x1, y1] = prediction.topLeft;
             const [x2, y2] = prediction.bottomRight;
             const width = x2 - x1;
