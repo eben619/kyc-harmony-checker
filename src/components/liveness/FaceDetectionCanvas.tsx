@@ -18,7 +18,7 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
     const loadModel = async () => {
       try {
         model = await blazeface.load();
-        console.log("BlazeFace model loaded successfully");
+        console.log("Face detection model loaded successfully");
       } catch (error) {
         console.error("Error loading BlazeFace model:", error);
       }
@@ -51,7 +51,10 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
           predictions.forEach((prediction) => {
             const start = prediction.topLeft as [number, number];
             const end = prediction.bottomRight as [number, number];
-            const size = [end[0] - start[0], end[1] - start[1]];
+            const size: [number, number] = [
+              end[0] - start[0],
+              end[1] - start[1]
+            ];
 
             context.strokeStyle = '#00ff00';
             context.lineWidth = 2;
