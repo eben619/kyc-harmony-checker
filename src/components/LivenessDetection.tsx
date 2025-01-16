@@ -3,6 +3,7 @@ import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { Card } from "@/components/ui/card";
 
 interface LivenessDetectionProps {
   userId: string;
@@ -15,6 +16,14 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
   const [isInitialized, setIsInitialized] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [faceLandmarker, setFaceLandmarker] = useState<FaceLandmarker | null>(null);
+  const [currentInstruction, setCurrentInstruction] = useState(0);
+
+  const instructions = [
+    "Look directly at the camera",
+    "Slowly turn your head left and right",
+    "Blink naturally a few times",
+    "Finally, give us a smile!"
+  ];
 
   useEffect(() => {
     const initializeMediaPipe = async () => {
@@ -144,7 +153,14 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
   }
 
   return (
-    <div className="space-y-4">
+    <Card className="p-6 space-y-4">
+      <div className="text-center mb-4">
+        <h3 className="text-lg font-semibold mb-2">Face Verification</h3>
+        <p className="text-sm text-muted-foreground">
+          {instructions[currentInstruction]}
+        </p>
+      </div>
+
       <div className="relative aspect-video w-full max-w-xl mx-auto bg-gray-100 rounded-lg overflow-hidden">
         <video
           ref={videoRef}
@@ -154,22 +170,36 @@ export function LivenessDetection({ userId, onComplete }: LivenessDetectionProps
         />
       </div>
 
-      <div className="flex justify-center gap-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-center sm:gap-4">
         {!isCameraActive ? (
-          <Button onClick={startCamera}>
+          <Button onClick={startCamera} className="w-full sm:w-auto">
             Start Camera
           </Button>
         ) : (
           <>
-            <Button onClick={stopCamera} variant="outline">
-              Stop Camera
+            <Button 
+              variant="outline" 
+              onClick={() => setCurrentInstruction((prev) => (prev + 1) % instructions.length)}
+              className="w-full sm:w-auto"
+            >
+              Next Instruction
             </Button>
-            <Button onClick={captureAndVerify}>
-              Verify Face
+            <Button 
+              onClick={captureAndVerify}
+              className="w-full sm:w-auto"
+            >
+              Complete Verification
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={stopCamera}
+              className="w-full sm:w-auto"
+            >
+              Cancel
             </Button>
           </>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
