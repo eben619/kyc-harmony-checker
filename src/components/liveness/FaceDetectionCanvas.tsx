@@ -7,6 +7,13 @@ interface FaceDetectionCanvasProps {
   onFaceDetected: (detected: boolean) => void;
 }
 
+interface FacePrediction {
+  topLeft: [number, number];
+  bottomRight: [number, number];
+  probability: number;
+  landmarks: Array<[number, number]>;
+}
+
 const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -40,7 +47,7 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
 
         // Get video frame as tensor
         const videoTensor = tf.browser.fromPixels(videoRef.current);
-        const predictions = await model.estimateFaces(videoTensor, false);
+        const predictions = await model.estimateFaces(videoTensor, false) as FacePrediction[];
         videoTensor.dispose(); // Clean up tensor
 
         const faceDetected = predictions.length > 0;
@@ -48,17 +55,15 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
 
         // Draw detection boxes
         if (faceDetected) {
-          predictions.forEach((prediction) => {
-            const start = prediction.topLeft as [number, number];
-            const end = prediction.bottomRight as [number, number];
-            const size: [number, number] = [
-              end[0] - start[0],
-              end[1] - start[1]
-            ];
+          predictions.forEach((prediction: FacePrediction) => {
+            const [x1, y1] = prediction.topLeft;
+            const [x2, y2] = prediction.bottomRight;
+            const width = x2 - x1;
+            const height = y2 - y1;
 
             context.strokeStyle = '#00ff00';
             context.lineWidth = 2;
-            context.strokeRect(start[0], start[1], size[0], size[1]);
+            context.strokeRect(x1, y1, width, height);
           });
         }
 
