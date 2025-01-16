@@ -7,34 +7,28 @@ interface FaceDetectionCanvasProps {
   onFaceDetected: (detected: boolean) => void;
 }
 
-interface DetectionBox {
-  xMin: number;
-  yMin: number;
-  width: number;
-  height: number;
-}
-
-interface FaceDetectionResult {
-  box: DetectionBox;
-  landmarks?: Array<{ x: number; y: number }>;
-  probability?: number[];
-}
+type FaceDetector = faceDetection.FaceDetector;
+type DetectorConfig = {
+  runtime: 'tfjs';
+  maxFaces: number;
+  modelType: 'short' | 'full';
+};
 
 const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    let detector: FaceDetector | null = null;
     let animationFrameId: number | undefined;
-    let detector: faceDetection.FaceDetector | null = null;
     let isProcessing = false;
 
     const loadModel = async () => {
       try {
         const model = faceDetection.SupportedModels.MediaPipeFaceDetector;
-        const detectorConfig = {
-          runtime: 'tfjs' as const,
+        const detectorConfig: DetectorConfig = {
+          runtime: 'tfjs',
           maxFaces: 1,
-          modelType: 'short' as const
+          modelType: 'short'
         };
         
         detector = await faceDetection.createDetector(model, detectorConfig);
@@ -59,7 +53,7 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
         context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
         // Detect faces
-        const faces = await detector.estimateFaces(videoRef.current) as FaceDetectionResult[];
+        const faces = await detector.estimateFaces(videoRef.current);
         const faceDetected = faces.length > 0;
         onFaceDetected(faceDetected);
 
