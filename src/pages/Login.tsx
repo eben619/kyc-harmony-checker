@@ -29,7 +29,7 @@ const Login = () => {
         <div className="glass-morphism rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-              Welcome to Universal KYC
+              Welcome to RevenuID
             </h2>
             <p className="mt-3 text-sm text-foreground/80">
               Sign in or create an account to continue
