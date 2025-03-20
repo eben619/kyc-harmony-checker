@@ -39,11 +39,11 @@ const AppSidebar = () => {
           <div className="h-12 w-12 overflow-hidden rounded-full">
             <img 
               src="/lovable-uploads/dc77b3f0-99e1-4d66-bb4b-d4f491673715.png" 
-              alt="Universal KYC Logo" 
+              alt="RevenuID Logo" 
               className="h-full w-full object-cover"
             />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Universal KYC</h1>
+          <h1 className="text-2xl font-bold text-foreground">RevenuID</h1>
         </div>
       </SidebarHeader>
       <SidebarContent>
