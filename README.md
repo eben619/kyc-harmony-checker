@@ -89,8 +89,8 @@ npx hardhat run scripts/deploy.js --network celo
 
 <h3>📩 Contact</h3>
 <ul>
-    <li><strong>Email:</strong> [Your Email]</li>
-    <li><strong>Website:</strong> [Your Website]</li>
-    <li><strong>Twitter:</strong> [Your Twitter]</li>
+    <li><strong>Email:</strong> [ebenyawboateng72@gmail.com]</li>
+    <li><strong>Website:</strong> []</li>
+    <li><strong>Twitter:</strong> []</li>
 </ul>
 
