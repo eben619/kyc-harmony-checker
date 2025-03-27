@@ -3,7 +3,7 @@
 <h2>Overview</h2>
 <p>RevenuID is a <strong>decentralized identity and tax compliance solution</strong> designed for gig workers, freelancers, employers, and hackathon participants. Built using <strong>Self Protocol, DIDs (Decentralized Identifiers), and Verifiable Credentials (VCs)</strong>, RevenuID ensures seamless tax withholding, automated compliance, and tamper-proof tax receipts on the blockchain.</p>
 
-<h2> Smart Contracts ( Alfajores ) </h2>
+<h2> Smart Contracts ( Alfajores ) [Verified On Sourcify] </h2>
 <ul>
     <li>✅ <strong>KYCVerification.sol</strong> – 0xb3dd69acdcdef43257f96bb10de2a2fa799b129 f</strong></li>
     <li>✅ <strong>EmployerRegistry.sol</strong> – 0x41423c857a68a2f77a1c7f7f3b0ca522c410447a </li>
