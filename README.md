@@ -21,7 +21,7 @@
 
 <h2>🛠️ Tech Stack</h2>
 <ul>
-    <li><strong>Blockchain:</strong> Celo (or preferred EVM-compatible chain)</li>
+    <li><strong>Blockchain:</strong> Celo </li>
     <li><strong>Identity Layer:</strong> Self Protocol (DID & Verifiable Credentials)</li>
     <li><strong>Smart Contracts:</strong> Solidity (Tax Withholding & Receipt Generation)</li>
     <li><strong>Frontend:</strong> Next.js (React + Tailwind CSS)</li>
