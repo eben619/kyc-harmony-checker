@@ -7,6 +7,8 @@ import { CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserProfile from "@/components/user/UserProfile";
 import WalletConnection from "@/components/wallet/WalletConnection";
+import TaxReceiptsList from "@/components/tax/TaxReceiptsList";
+import TaxDeductionsList from "@/components/tax/TaxDeductionsList";
 
 interface WalletData {
   wallet_address: string | null;
@@ -85,47 +87,52 @@ const Account = () => {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Account Settings</h1>
       
-      <Card className="mb-6">
-        <CardHeader>
-          <UserProfile user={user} />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-medium mb-2">Email</h3>
-              <p className="text-muted-foreground">{user.email}</p>
-            </div>
-            
-            <div>
-              <h3 className="font-medium mb-2">Wallet Address</h3>
-              {loading ? (
-                <p className="text-muted-foreground">Loading...</p>
-              ) : (
-                <WalletConnection 
-                  walletData={walletData} 
-                  onWalletUpdate={fetchWalletAccount}
-                />
-              )}
-            </div>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <UserProfile user={user} />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-medium mb-2">Email</h3>
+                <p className="text-muted-foreground">{user.email}</p>
+              </div>
+              
+              <div>
+                <h3 className="font-medium mb-2">Wallet Address</h3>
+                {loading ? (
+                  <p className="text-muted-foreground">Loading...</p>
+                ) : (
+                  <WalletConnection 
+                    walletData={walletData} 
+                    onWalletUpdate={fetchWalletAccount}
+                  />
+                )}
+              </div>
 
-            <div>
-              <h3 className="font-medium mb-3">Verification Status</h3>
-              <div className="space-y-2">
-                <VerificationStatus 
-                  completed={false} 
-                  label="KYC Verification" 
-                  path="/kyc"
-                />
-                <VerificationStatus 
-                  completed={false} 
-                  label="Tax Information" 
-                  path="/tax"
-                />
+              <div>
+                <h3 className="font-medium mb-3">Verification Status</h3>
+                <div className="space-y-2">
+                  <VerificationStatus 
+                    completed={false} 
+                    label="KYC Verification" 
+                    path="/kyc"
+                  />
+                  <VerificationStatus 
+                    completed={false} 
+                    label="Tax Information" 
+                    path="/tax"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <TaxReceiptsList />
+        <TaxDeductionsList />
+      </div>
     </div>
   );
 };
