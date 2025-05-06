@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import { useAddress, useConnectionStatus } from "@thirdweb-dev/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
@@ -7,7 +8,9 @@ import { LivenessDetection } from './LivenessDetection';
 import { supabase } from '@/integrations/supabase/client';
 
 export function KYCVerification() {
-  const { address, isConnected } = useAccount();
+  const address = useAddress();
+  const connectionStatus = useConnectionStatus();
+  const isConnected = connectionStatus === "connected";
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
   const [verificationComplete, setVerificationComplete] = useState(false);

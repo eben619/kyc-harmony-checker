@@ -1,11 +1,12 @@
+
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import AppSidebar from "./AppSidebar";
-import { WagmiConfig } from 'wagmi';
-import { config } from './wallet/web3Config';
+import { ThirdwebProvider, supportedChains } from '@thirdweb-dev/react';
+import { Celo, CeloAlfajores } from '@thirdweb-dev/chains';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
+  const clientId = "762b809ae68c1dbc7642eab534e6942b";
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -20,7 +22,11 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   return (
-    <WagmiConfig config={config}>
+    <ThirdwebProvider 
+      activeChain={{ chains: [Celo, CeloAlfajores], defaultChain: Celo }}
+      clientId={clientId}
+      supportedChains={[Celo, CeloAlfajores]}
+    >
       <SidebarProvider>
         <div className="min-h-screen flex w-full bg-background text-foreground">
           <AppSidebar />
@@ -44,7 +50,7 @@ const Layout = ({ children }: LayoutProps) => {
           </main>
         </div>
       </SidebarProvider>
-    </WagmiConfig>
+    </ThirdwebProvider>
   );
 };
 
