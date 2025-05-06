@@ -1,164 +1,147 @@
 
 import React, { useState } from 'react';
-import { useSelf } from '@/contexts/SelfContext';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useSelf } from '@/contexts/SelfContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2 } from 'lucide-react';
-
-interface ProofData {
-  type: string;
-  title: string;
-  description: string;
-  available: boolean;
-}
-
-const AVAILABLE_PROOFS: ProofData[] = [
-  {
-    type: 'identity',
-    title: 'Identity Verification',
-    description: 'Prove your identity without revealing personal details',
-    available: true,
-  },
-  {
-    type: 'age',
-    title: 'Age Verification',
-    description: 'Prove you are above a certain age without revealing your birthdate',
-    available: true,
-  },
-  {
-    type: 'residency',
-    title: 'Residency Verification',
-    description: 'Prove your country of residence without revealing your address',
-    available: true,
-  },
-  {
-    type: 'income',
-    title: 'Income Verification',
-    description: 'Prove income level without revealing exact amounts',
-    available: false,
-  },
-];
+import { Checkbox } from '@/components/ui/checkbox';
 
 const ProofGenerator = () => {
   const { selfID, isConnected } = useSelf();
   const { toast } = useToast();
-  const [selectedProofs, setSelectedProofs] = useState<string[]>([]);
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [generatedProofs, setGeneratedProofs] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [proofType, setProofType] = useState('age');
+  const [proofValue, setProofValue] = useState('');
+  const [proofGenerated, setProofGenerated] = useState<any>(null);
+  
+  // Mock data options for proof generation
+  const [selectedFields, setSelectedFields] = useState({
+    name: false,
+    age: true,
+    country: false,
+    email: false,
+  });
 
-  const handleSelectProof = (proofType: string) => {
-    setSelectedProofs(prev => 
-      prev.includes(proofType)
-        ? prev.filter(p => p !== proofType)
-        : [...prev, proofType]
-    );
-  };
+  const handleGenerateProof = async () => {
+    if (!isConnected) {
+      toast({
+        title: "Not connected",
+        description: "Please connect to Self Protocol first",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const handleGenerateProofs = async () => {
-    if (!selfID || !isConnected || selectedProofs.length === 0) return;
-
-    setIsGenerating(true);
+    setLoading(true);
+    
     try {
-      // Simulate proof generation with Self Protocol
-      // In a real implementation, you would call the Self Protocol SDK here
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const mockProofs: Record<string, string> = {};
-      selectedProofs.forEach(proofType => {
-        mockProofs[proofType] = `proof_${proofType}_${Date.now()}`;
-      });
-
-      setGeneratedProofs(mockProofs);
+      // Simulate proof generation with a delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Create a mock proof
+      const mockProof = {
+        id: `proof-${Math.random().toString(36).substr(2, 9)}`,
+        type: proofType,
+        value: proofType === 'age' ? 'over18' : proofValue,
+        issuer: selfID.id,
+        issuedAt: new Date().toISOString(),
+        expiration: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        fields: Object.entries(selectedFields)
+          .filter(([_, selected]) => selected)
+          .map(([field]) => field),
+      };
+      
+      setProofGenerated(mockProof);
+      
       toast({
-        title: "Proofs Generated",
-        description: `Successfully generated ${selectedProofs.length} proof(s)`,
+        title: "Proof Generated",
+        description: "Your proof has been successfully generated",
       });
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Error generating proof:", error);
       toast({
-        title: "Error Generating Proofs",
-        description: error.message || "Failed to generate proofs",
+        title: "Error",
+        description: "Failed to generate proof",
         variant: "destructive",
       });
     } finally {
-      setIsGenerating(false);
+      setLoading(false);
     }
   };
-
-  if (!isConnected) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Generate Proofs</CardTitle>
-          <CardDescription>
-            Connect to Self Protocol to generate zero-knowledge proofs
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-center py-6">
-          <p className="text-muted-foreground">Please connect to Self Protocol first</p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Generate Proofs</CardTitle>
-        <CardDescription>
-          Select the information you want to prove without revealing sensitive data
-        </CardDescription>
+        <CardTitle>Generate Self Proof</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {AVAILABLE_PROOFS.map((proof) => (
-            <div key={proof.type} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`proof-${proof.type}`}
-                checked={selectedProofs.includes(proof.type)}
-                onCheckedChange={() => proof.available && handleSelectProof(proof.type)}
-                disabled={!proof.available || isGenerating}
-              />
-              <div className="grid gap-1.5 leading-none">
-                <Label 
-                  htmlFor={`proof-${proof.type}`}
-                  className={!proof.available ? "text-muted-foreground" : ""}
-                >
-                  {proof.title}
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  {proof.description}
-                  {!proof.available && " (Coming soon)"}
-                </p>
-              </div>
-            </div>
-          ))}
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="proofType">Proof Type</Label>
+          <select
+            id="proofType"
+            value={proofType}
+            onChange={(e) => setProofType(e.target.value)}
+            className="w-full p-2 border rounded-md"
+            disabled={loading || !isConnected}
+          >
+            <option value="age">Age Verification</option>
+            <option value="identity">Identity Verification</option>
+            <option value="address">Address Verification</option>
+            <option value="custom">Custom Verification</option>
+          </select>
         </div>
-
-        {Object.keys(generatedProofs).length > 0 && (
-          <div className="mt-6 p-4 border rounded-md bg-muted/50">
-            <h4 className="text-sm font-medium mb-2">Generated Proofs</h4>
-            <ul className="space-y-2">
-              {Object.entries(generatedProofs).map(([type, proofId]) => (
-                <li key={type} className="text-sm">
-                  <span className="font-medium">{AVAILABLE_PROOFS.find(p => p.type === type)?.title}:</span>{' '}
-                  <code className="px-1 py-0.5 bg-muted rounded text-xs">{proofId}</code>
-                </li>
-              ))}
-            </ul>
+        
+        {proofType === 'custom' && (
+          <div className="space-y-2">
+            <Label htmlFor="proofValue">Proof Value</Label>
+            <Input
+              id="proofValue"
+              value={proofValue}
+              onChange={(e) => setProofValue(e.target.value)}
+              disabled={loading || !isConnected}
+            />
+          </div>
+        )}
+        
+        <div className="space-y-2">
+          <Label>Fields to Include</Label>
+          <div className="space-y-2">
+            {Object.entries(selectedFields).map(([field, selected]) => (
+              <div key={field} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`field-${field}`}
+                  checked={selected}
+                  onCheckedChange={(checked) => 
+                    setSelectedFields(prev => ({ ...prev, [field]: !!checked }))
+                  }
+                  disabled={loading || !isConnected}
+                />
+                <Label htmlFor={`field-${field}`} className="cursor-pointer">
+                  {field.charAt(0).toUpperCase() + field.slice(1)}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {proofGenerated && (
+          <div className="mt-4 p-3 bg-muted rounded-md">
+            <h4 className="font-medium mb-1">Generated Proof</h4>
+            <pre className="text-xs overflow-auto p-2 bg-background rounded-sm">
+              {JSON.stringify(proofGenerated, null, 2)}
+            </pre>
           </div>
         )}
       </CardContent>
       <CardFooter>
-        <Button 
-          onClick={handleGenerateProofs} 
-          disabled={selectedProofs.length === 0 || isGenerating}
+        <Button
+          onClick={handleGenerateProof}
+          disabled={loading || !isConnected}
           className="w-full"
         >
-          {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isGenerating ? "Generating Proofs..." : "Generate Selected Proofs"}
+          {loading ? "Generating..." : "Generate Proof"}
         </Button>
       </CardFooter>
     </Card>

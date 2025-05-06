@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAddress } from '@thirdweb-dev/react';
-import { ethers } from 'ethers';
 
 interface SelfContextType {
   selfID: any | null;
@@ -28,8 +27,8 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
   const walletAddress = useAddress();
 
   const connect = async () => {
-    if (!walletAddress || !window.ethereum) {
-      setError("Wallet not connected or ethereum not available");
+    if (!walletAddress) {
+      setError("Wallet not connected");
       return;
     }
 

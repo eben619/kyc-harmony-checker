@@ -1,75 +1,68 @@
 
 import React from 'react';
-import { useSelf } from '@/contexts/SelfContext';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useSelf } from '@/contexts/SelfContext';
+import { useAddress } from '@thirdweb-dev/react';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Check, XCircle } from 'lucide-react';
 
 const SelfConnect = () => {
   const { selfID, isConnected, connect, disconnect, loading, error } = useSelf();
-  const { toast } = useToast();
-
-  const handleConnect = async () => {
-    try {
-      await connect();
-      toast({
-        title: "Connected to Self Protocol",
-        description: "You are now connected to Self Protocol",
-      });
-    } catch (err: any) {
-      toast({
-        title: "Connection Failed",
-        description: err.message || "Failed to connect to Self Protocol",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDisconnect = () => {
-    disconnect();
-    toast({
-      title: "Disconnected",
-      description: "You have disconnected from Self Protocol",
-    });
-  };
+  const address = useAddress();
 
   return (
-    <div className="flex flex-col space-y-4 p-4 border rounded-lg bg-card">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Self Protocol Connection</h3>
-        <div className="flex items-center gap-2">
-          {isConnected ? (
-            <div className="flex items-center text-green-500 gap-1">
-              <CheckCircle2 size={16} />
-              <span className="text-sm">Connected</span>
+    <Card>
+      <CardHeader>
+        <CardTitle>Self Protocol Connection</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <span className="font-medium">Status:</span>
+            <div className="flex items-center">
+              {isConnected ? (
+                <span className="flex items-center text-green-500">
+                  <Check className="w-4 h-4 mr-1" /> Connected
+                </span>
+              ) : (
+                <span className="flex items-center text-gray-400">
+                  <XCircle className="w-4 h-4 mr-1" /> Disconnected
+                </span>
+              )}
             </div>
-          ) : (
-            <div className="flex items-center text-red-500 gap-1">
-              <XCircle size={16} />
-              <span className="text-sm">Disconnected</span>
+          </div>
+          
+          {selfID && (
+            <div>
+              <span className="font-medium">DID:</span> <span className="font-mono text-xs">{selfID.id}</span>
             </div>
           )}
+          
+          {error && (
+            <div className="text-destructive text-sm">{error}</div>
+          )}
         </div>
-      </div>
-
-      {error && (
-        <div className="text-sm text-destructive p-2 bg-destructive/10 rounded">
-          Error: {error}
-        </div>
-      )}
-
-      <div>
+      </CardContent>
+      <CardFooter>
         {!isConnected ? (
-          <Button onClick={handleConnect} disabled={loading} className="w-full">
-            {loading ? "Connecting..." : "Connect to Self Protocol"}
+          <Button 
+            onClick={connect} 
+            disabled={!address || loading}
+            className="w-full"
+          >
+            {loading ? "Connecting..." : "Connect Self Protocol"}
           </Button>
         ) : (
-          <Button onClick={handleDisconnect} variant="outline" className="w-full">
-            Disconnect
+          <Button 
+            variant="destructive" 
+            onClick={disconnect}
+            className="w-full"
+          >
+            Disconnect Self Protocol
           </Button>
         )}
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 };
 

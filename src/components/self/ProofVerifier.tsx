@@ -1,137 +1,137 @@
 
 import React, { useState } from 'react';
-import { useSelf } from '@/contexts/SelfContext';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useSelf } from '@/contexts/SelfContext';
 import { useToast } from '@/components/ui/use-toast';
-import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle } from 'lucide-react';
 
 const ProofVerifier = () => {
-  const { selfID, isConnected } = useSelf();
+  const { isConnected } = useSelf();
   const { toast } = useToast();
-  const [proofId, setProofId] = useState<string>('');
-  const [isVerifying, setIsVerifying] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
+  const [proofInput, setProofInput] = useState('');
   const [verificationResult, setVerificationResult] = useState<{
-    verified: boolean;
-    message: string;
+    valid: boolean;
+    details?: any;
   } | null>(null);
 
   const handleVerifyProof = async () => {
-    if (!selfID || !isConnected || !proofId) return;
+    if (!isConnected) {
+      toast({
+        title: "Not connected",
+        description: "Please connect to Self Protocol first",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    setIsVerifying(true);
-    setVerificationResult(null);
+    if (!proofInput.trim()) {
+      toast({
+        title: "Missing proof",
+        description: "Please enter a proof to verify",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
     
     try {
-      // Simulate proof verification with Self Protocol
-      // In a real implementation, you would call the Self Protocol SDK here
+      // Parse the input proof
+      const parsedProof = JSON.parse(proofInput);
+      
+      // Simulate verification with a delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Mock verification logic
-      const isValid = proofId.startsWith('proof_');
+      // Simple validation - in a real app this would check signatures, etc.
+      const isValid = parsedProof && parsedProof.id && parsedProof.issuer;
       
       setVerificationResult({
-        verified: isValid,
-        message: isValid 
-          ? "Proof verified successfully. The credential is valid." 
-          : "Proof verification failed. Invalid proof format."
+        valid: isValid,
+        details: isValid ? parsedProof : null,
       });
       
       toast({
-        title: isValid ? "Verification Successful" : "Verification Failed",
+        title: isValid ? "Proof Valid" : "Proof Invalid",
         description: isValid 
-          ? "The proof was verified successfully"
-          : "The proof could not be verified",
+          ? "The proof has been successfully verified" 
+          : "The proof is invalid or tampered with",
         variant: isValid ? "default" : "destructive",
       });
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Error verifying proof:", error);
       setVerificationResult({
-        verified: false,
-        message: `Verification error: ${error.message || "Unknown error"}`,
+        valid: false,
       });
-      
       toast({
-        title: "Verification Error",
-        description: error.message || "An error occurred during verification",
+        title: "Invalid Proof Format",
+        description: "The proof format is invalid or malformed",
         variant: "destructive",
       });
     } finally {
-      setIsVerifying(false);
+      setLoading(false);
     }
   };
-
-  if (!isConnected) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Verify Proofs</CardTitle>
-          <CardDescription>
-            Verify zero-knowledge proofs without exposing sensitive data
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-center py-6">
-          <p className="text-muted-foreground">Please connect to Self Protocol first</p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Verify Proofs</CardTitle>
-        <CardDescription>
-          Enter a proof ID to verify its authenticity
-        </CardDescription>
+        <CardTitle>Verify Self Proof</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="proofId">Proof ID</Label>
-            <Input
-              id="proofId"
-              placeholder="Enter proof ID (e.g., proof_age_1234567890)"
-              value={proofId}
-              onChange={(e) => setProofId(e.target.value)}
-              disabled={isVerifying}
-            />
-          </div>
-
-          {verificationResult && (
-            <div className={`p-4 border rounded-md ${
-              verificationResult.verified 
-                ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' 
-                : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
-            }`}>
-              <div className="flex items-start gap-3">
-                {verificationResult.verified ? (
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
-                )}
-                <div>
-                  <h4 className={`text-sm font-medium ${
-                    verificationResult.verified ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
-                  }`}>
-                    {verificationResult.verified ? 'Verification Successful' : 'Verification Failed'}
-                  </h4>
-                  <p className="text-sm mt-1">{verificationResult.message}</p>
-                </div>
-              </div>
-            </div>
-          )}
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <label htmlFor="proofInput" className="block text-sm font-medium">
+            Proof Data
+          </label>
+          <Textarea
+            id="proofInput"
+            value={proofInput}
+            onChange={(e) => setProofInput(e.target.value)}
+            rows={8}
+            placeholder="Paste the proof JSON here..."
+            disabled={loading}
+            className="font-mono text-sm"
+          />
         </div>
+        
+        {verificationResult !== null && (
+          <div className={`p-4 rounded-md ${
+            verificationResult.valid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+          }`}>
+            <div className="flex items-center space-x-2 mb-2">
+              {verificationResult.valid ? (
+                <>
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span className="font-medium text-green-700">Proof Valid</span>
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-5 w-5 text-red-500" />
+                  <span className="font-medium text-red-700">Proof Invalid</span>
+                </>
+              )}
+            </div>
+            
+            {verificationResult.valid && verificationResult.details && (
+              <div className="mt-2">
+                <h4 className="text-sm font-medium mb-1">Proof Details</h4>
+                <pre className="text-xs p-2 bg-background rounded-sm overflow-auto">
+                  {JSON.stringify(verificationResult.details, null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
       <CardFooter>
-        <Button 
-          onClick={handleVerifyProof} 
-          disabled={!proofId || isVerifying}
+        <Button
+          onClick={handleVerifyProof}
+          disabled={loading || !isConnected || !proofInput}
           className="w-full"
         >
-          {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isVerifying ? "Verifying..." : "Verify Proof"}
+          {loading ? "Verifying..." : "Verify Proof"}
         </Button>
       </CardFooter>
     </Card>
