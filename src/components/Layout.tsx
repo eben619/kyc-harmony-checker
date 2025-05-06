@@ -1,11 +1,11 @@
-
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import AppSidebar from "./AppSidebar";
-import { ThirdwebProvider } from "@thirdweb-dev/react";
+import { WagmiConfig } from 'wagmi';
+import { config } from './wallet/web3Config';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,10 +20,7 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   return (
-    <ThirdwebProvider 
-      clientId="762b809ae68c1dbc7642eab534e6942b"
-      activeChain="ethereum"
-    >
+    <WagmiConfig config={config}>
       <SidebarProvider>
         <div className="min-h-screen flex w-full bg-background text-foreground">
           <AppSidebar />
@@ -47,7 +44,7 @@ const Layout = ({ children }: LayoutProps) => {
           </main>
         </div>
       </SidebarProvider>
-    </ThirdwebProvider>
+    </WagmiConfig>
   );
 };
 

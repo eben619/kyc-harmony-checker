@@ -1,8 +1,7 @@
-
-import React, { useEffect } from "react";
-import { useAddress, useDisconnect, useConnect, metamaskWallet } from "@thirdweb-dev/react";
+import React from "react";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { InjectedConnector } from "wagmi/connectors/injected";
 import { Button } from "@/components/ui/button";
-import { Wallet } from "lucide-react";
 
 interface WalletData {
   wallet_address: string | null;
@@ -14,16 +13,16 @@ interface WalletConnectionProps {
   onWalletUpdate?: () => Promise<void>;
 }
 
-const WalletConnection: React.FC<WalletConnectionProps> = ({ onWalletUpdate }) => {
-  const address = useAddress();
-  const disconnect = useDisconnect();
-  const connect = useConnect();
-  
-  const metamaskConfig = metamaskWallet();
-  
+const WalletConnection: React.FC<WalletConnectionProps> = ({ walletData, onWalletUpdate }) => {
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect({
+    connector: new InjectedConnector(),
+  });
+  const { disconnect } = useDisconnect();
+
   const handleConnect = async () => {
     try {
-      await connect(metamaskConfig);
+      await connect();
       if (onWalletUpdate) {
         await onWalletUpdate();
       }
@@ -43,22 +42,14 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ onWalletUpdate }) =
     }
   };
 
-  useEffect(() => {
-    if (address && onWalletUpdate) {
-      onWalletUpdate();
-    }
-  }, [address, onWalletUpdate]);
-
-  if (address) {
+  if (isConnected && address) {
     return (
       <div className="flex flex-col gap-4 items-center">
         <p className="text-foreground">Connected to {address}</p>
         <Button 
           variant="destructive"
           onClick={handleDisconnect}
-          className="flex items-center gap-2"
         >
-          <Wallet className="h-4 w-4" />
           Disconnect
         </Button>
       </div>
@@ -68,9 +59,8 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ onWalletUpdate }) =
   return (
     <Button 
       onClick={handleConnect}
-      className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2"
+      className="bg-primary text-primary-foreground hover:bg-primary/90"
     >
-      <Wallet className="h-4 w-4" />
       Connect Wallet
     </Button>
   );
