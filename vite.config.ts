@@ -20,4 +20,18 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+    rollupOptions: {
+      external: [
+        '@self.id/framework',
+        '@self.id/web'
+      ]
+    }
+  },
+  optimizeDeps: {
+    exclude: ['@self.id/framework', '@self.id/web']
+  }
 }));

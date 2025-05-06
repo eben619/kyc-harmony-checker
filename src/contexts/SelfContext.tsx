@@ -1,12 +1,10 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAddress } from '@thirdweb-dev/react';
-import { SelfProvider, SelfID, useClient } from '@self.id/framework';
-import { EthereumWebAuth, getAccountId } from '@self.id/web';
 import { ethers } from 'ethers';
 
 interface SelfContextType {
-  selfID: SelfID | null;
+  selfID: any | null;
   isConnected: boolean;
   connect: () => Promise<void>;
   disconnect: () => void;
@@ -18,23 +16,20 @@ const SelfContext = createContext<SelfContextType | undefined>(undefined);
 
 export const SelfProviderWrapper = ({ children }: { children: ReactNode }) => {
   return (
-    <SelfProvider>
-      <SelfContextProvider>{children}</SelfContextProvider>
-    </SelfProvider>
+    <SelfContextProvider>{children}</SelfContextProvider>
   );
 };
 
 export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
-  const [selfID, setSelfID] = useState<SelfID | null>(null);
+  const [selfID, setSelfID] = useState<any | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const walletAddress = useAddress();
-  const client = useClient();
 
   const connect = async () => {
-    if (!walletAddress || !client || !window.ethereum) {
-      setError("Wallet not connected or Self client not initialized");
+    if (!walletAddress || !window.ethereum) {
+      setError("Wallet not connected or ethereum not available");
       return;
     }
 
@@ -42,23 +37,23 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       setError(null);
 
-      // Request ethereum accounts
-      const provider = new ethers.providers.Web3Provider(window.ethereum as any);
-      const signer = provider.getSigner();
-      const accountId = await getAccountId(provider, walletAddress);
-
-      // Create auth
-      const authMethod = await EthereumWebAuth.getAuthMethod(provider, accountId);
+      // Simulated connection process
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Connect to Self ID
-      const selfID = await client.authenticate(authMethod);
+      // Create a mock selfID
+      const mockSelfID = {
+        id: `did:ethr:${walletAddress}`,
+        address: walletAddress,
+        isAuthenticated: true,
+      };
       
-      setSelfID(selfID);
+      setSelfID(mockSelfID);
       setIsConnected(true);
-      setLoading(false);
+      console.log("Connected to Self Protocol (mock)", mockSelfID);
     } catch (err: any) {
       console.error("Error connecting to Self ID:", err);
       setError(err.message || "Failed to connect to Self ID");
+    } finally {
       setLoading(false);
     }
   };
@@ -69,10 +64,10 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    if (!isConnected && selfID) {
+    if (!walletAddress && isConnected) {
       disconnect();
     }
-  }, [isConnected, selfID]);
+  }, [walletAddress, isConnected]);
 
   return (
     <SelfContext.Provider value={{ selfID, isConnected, connect, disconnect, loading, error }}>

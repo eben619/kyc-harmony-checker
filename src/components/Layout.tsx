@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import AppSidebar from "./AppSidebar";
 import { ThirdwebProvider } from '@thirdweb-dev/react';
 import { Celo } from '@thirdweb-dev/chains';
-import { SelfProviderWrapper } from "@/contexts/SelfContext";
 
 interface LayoutProps {
   children: React.ReactNode;
