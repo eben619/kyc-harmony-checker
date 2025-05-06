@@ -1,5 +1,6 @@
+
 import React from "react";
-import { useAccount } from "wagmi";
+import { useAddress } from "@thirdweb-dev/react";
 import WalletConnection from "./WalletConnection";
 
 interface WalletConnectionButtonProps {
@@ -14,7 +15,7 @@ const WalletConnectionButton: React.FC<WalletConnectionButtonProps> = ({
   walletData,
   onWalletUpdate,
 }) => {
-  const { isConnected } = useAccount();
+  const address = useAddress();
 
   return (
     <div className="flex justify-center">

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
@@ -5,6 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAddress } from "@thirdweb-dev/react";
 import UserProfile from "@/components/user/UserProfile";
 import WalletConnection from "@/components/wallet/WalletConnection";
 import TaxReceiptsList from "@/components/tax/TaxReceiptsList";
@@ -18,6 +20,7 @@ interface WalletData {
 const Account = () => {
   const supabase = useSupabaseClient();
   const user = useUser();
+  const address = useAddress();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -51,6 +54,39 @@ const Account = () => {
       setLoading(false);
     }
   };
+  
+  // Update wallet account when address changes
+  useEffect(() => {
+    if (user && address) {
+      const updateWalletAddress = async () => {
+        try {
+          const { error } = await supabase
+            .from("wallet_accounts")
+            .upsert({
+              user_id: user.id,
+              wallet_address: address,
+            }, {
+              onConflict: 'user_id'
+            });
+
+          if (error) {
+            console.error("Error updating wallet address:", error);
+            toast({
+              title: "Error",
+              description: "Failed to update wallet address",
+              variant: "destructive",
+            });
+          } else {
+            await fetchWalletAccount();
+          }
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      };
+      
+      updateWalletAddress();
+    }
+  }, [user, address]);
 
   useEffect(() => {
     if (!user) {
