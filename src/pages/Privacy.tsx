@@ -1,43 +1,43 @@
-import { Card } from "@/components/ui/card";
-import { Shield, Globe, User } from "lucide-react";
+
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SelfProviderWrapper } from '@/contexts/SelfContext';
+import SelfConnect from '@/components/self/SelfConnect';
+import ProofGenerator from '@/components/self/ProofGenerator';
+import ProofVerifier from '@/components/self/ProofVerifier';
 
 const Privacy = () => {
-  const proofs = [
-    {
-      title: "Age Proof",
-      description: "Verify your age without revealing your exact birth date",
-      icon: Shield,
-    },
-    {
-      title: "Country Proof",
-      description: "Prove your residency while maintaining location privacy",
-      icon: Globe,
-    },
-    {
-      title: "Proof of Personhood",
-      description: "Verify your identity while protecting personal information",
-      icon: User,
-    },
-  ];
-
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold mb-4 text-foreground">Privacy Settings</h1>
-      <p className="text-muted-foreground mb-8">Manage your privacy settings and data preferences here.</p>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">Privacy & Proofs</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {proofs.map((proof) => (
-          <Card key={proof.title} className="p-6 bg-card hover:bg-accent/50 transition-colors">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="p-3 rounded-full bg-primary/10">
-                <proof.icon className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground">{proof.title}</h3>
-              <p className="text-muted-foreground">{proof.description}</p>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <SelfProviderWrapper>
+        <div className="grid gap-6">
+          <SelfConnect />
+          
+          <Tabs defaultValue="generate" className="w-full">
+            <TabsList className="grid grid-cols-2 w-full">
+              <TabsTrigger value="generate">Generate Proofs</TabsTrigger>
+              <TabsTrigger value="verify">Verify Proofs</TabsTrigger>
+            </TabsList>
+            <TabsContent value="generate" className="mt-4">
+              <ProofGenerator />
+            </TabsContent>
+            <TabsContent value="verify" className="mt-4">
+              <ProofVerifier />
+            </TabsContent>
+          </Tabs>
+          
+          <div className="bg-muted p-4 rounded-lg">
+            <h3 className="font-medium mb-2">About Zero-Knowledge Proofs</h3>
+            <p className="text-sm text-muted-foreground">
+              Zero-knowledge proofs allow you to prove certain information without revealing the underlying data.
+              For example, you can prove you're over 18 without revealing your actual birth date.
+              Self Protocol makes this cryptographic technology accessible and easy to use.
+            </p>
+          </div>
+        </div>
+      </SelfProviderWrapper>
     </div>
   );
 };
