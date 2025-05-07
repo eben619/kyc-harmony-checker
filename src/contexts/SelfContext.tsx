@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAddress } from '@thirdweb-dev/react';
 import { getUniversalLink, SelfAppBuilder } from '@selfxyz/core';
@@ -143,33 +142,28 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
       const proofConfig = {
         age: {
           scope: "identity:age",
-          fact: "over18",
           reason: "Age verification required"
         },
         identity: {
           scope: "identity:basic",
-          fact: "identityVerified",
           reason: "Identity verification required"
         },
         address: {
           scope: "identity:address",
-          fact: "addressVerified",
           reason: "Address verification required"
         },
         custom: {
           scope: "custom:verification",
-          fact: "customVerified",
           reason: "Custom verification required"
         }
       };
       
       const config = proofConfig[proofType as keyof typeof proofConfig] || proofConfig.identity;
       
-      // Generate universal link for deeplink into Self app
+      // Generate universal link for deeplink into Self app - removed the 'fact' property
       const universalLink = getUniversalLink({
         appName: "KYC Harmony",
         scope: config.scope,
-        fact: config.fact,
         reason: config.reason,
         callbackUrl: `${window.location.origin}/privacy?verified=true&type=${proofType}`,
       });
