@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAddress } from '@thirdweb-dev/react';
 import { getUniversalLink, SelfAppBuilder } from '@selfxyz/core';
+import { supabase } from "@/integrations/supabase/client";
 
 // Define interface for SelfID
 interface SelfID {
@@ -52,6 +53,19 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
         }).build();
         
         setSelfApp(app);
+        
+        // Check if we already have a stored Self ID for this wallet
+        const storedSelfID = localStorage.getItem(`selfID_${walletAddress}`);
+        if (storedSelfID) {
+          try {
+            const parsedSelfID = JSON.parse(storedSelfID);
+            setSelfID(parsedSelfID);
+            setIsConnected(true);
+          } catch (e) {
+            console.error("Failed to parse stored Self ID:", e);
+            localStorage.removeItem(`selfID_${walletAddress}`);
+          }
+        }
       } catch (err: any) {
         console.error("Error initializing Self app:", err);
       }
@@ -69,8 +83,7 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
       setError(null);
 
       // In a production environment, this would interact with the actual Self Protocol
-      // For this implementation, we're creating a mock connection
-      // When using the actual Self Protocol SDK, this would initiate the connection process
+      // For this implementation, we're creating a mock connection that simulates the process
       
       // Simulate connection process
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -82,13 +95,12 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: true,
       };
       
+      // Store the Self ID in localStorage for persistence
+      localStorage.setItem(`selfID_${walletAddress}`, JSON.stringify(mockSelfID));
+      
       setSelfID(mockSelfID);
       setIsConnected(true);
       console.log("Connected to Self Protocol", mockSelfID);
-      
-      // In production: 
-      // This would use the Self Protocol SDK to establish a connection
-      // and obtain the user's DID and credentials
       
     } catch (err: any) {
       console.error("Error connecting to Self ID:", err);
@@ -99,6 +111,9 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const disconnect = () => {
+    if (walletAddress) {
+      localStorage.removeItem(`selfID_${walletAddress}`);
+    }
     setSelfID(null);
     setIsConnected(false);
   };
@@ -150,17 +165,23 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Verify proof data
+  // Verify proof data using our edge function
   const verifyProof = async (proofData: any): Promise<boolean> => {
     try {
-      // In production, this would use the SelfBackendVerifier to verify the proof
-      // For now, we'll simulate verification with a delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call our edge function to verify the proof
+      const { data, error } = await supabase.functions.invoke("self-verify", {
+        body: { proofData }
+      });
       
-      // Mock verification - in production this would verify the cryptographic proof
-      const isValid = proofData && proofData.id && proofData.issuer;
+      if (error) {
+        console.error("Error calling verification edge function:", error);
+        return false;
+      }
       
-      return isValid;
+      console.log("Verification result:", data);
+      
+      // Return the verification result
+      return data?.valid || false;
     } catch (error) {
       console.error("Error verifying proof:", error);
       return false;

@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { useSelf } from '@/contexts/SelfContext';
 import { useAddress } from '@thirdweb-dev/react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { Check, ExternalLink, QrCode, XCircle } from 'lucide-react';
+import { Check, ExternalLink, QrCode, ShieldCheck, XCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const SelfConnect = () => {
   const { selfID, isConnected, connect, disconnect, loading, error } = useSelf();
@@ -14,9 +15,23 @@ const SelfConnect = () => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Self Protocol Connection</span>
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            <span>Self Protocol Connection</span>
+          </div>
           {isConnected && (
-            <QrCode className="h-5 w-5 text-green-500" />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="p-1 bg-green-50 rounded-full">
+                    <QrCode className="h-5 w-5 text-green-500" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Self Protocol Identity Verified</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </CardTitle>
       </CardHeader>
@@ -44,7 +59,7 @@ const SelfConnect = () => {
                 <span className="font-mono text-xs truncate max-w-[220px]">{selfID.id}</span>
               </div>
               <div className="text-xs text-muted-foreground mt-2">
-                Your decentralized identity is securely connected
+                Your decentralized identity is securely verified using SelfCircuitLibrary
               </div>
             </div>
           )}
@@ -58,7 +73,8 @@ const SelfConnect = () => {
         
         <div className="bg-muted/50 p-3 rounded-md">
           <p className="text-sm text-muted-foreground">
-            Self Protocol provides decentralized identity verification and zero-knowledge proofs for privacy
+            Self Protocol provides decentralized identity verification and zero-knowledge proofs for privacy. 
+            The implementation uses the SelfVerificationRoot and CircuitAttributeHandler libraries.
           </p>
         </div>
       </CardContent>

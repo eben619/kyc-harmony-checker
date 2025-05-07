@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useSelf } from '@/contexts/SelfContext';
 import { useToast } from '@/components/ui/use-toast';
-import { CheckCircle, Loader2, XCircle } from 'lucide-react';
+import { CheckCircle, FileJson, FileText, Loader2, ShieldCheck, XCircle } from 'lucide-react';
 
 const ProofVerifier = () => {
   const { isConnected, verifyProof } = useSelf();
@@ -42,18 +42,21 @@ const ProofVerifier = () => {
       // Parse the input proof
       const parsedProof = JSON.parse(proofInput);
       
-      // Use the verifyProof method from context
+      // Use the verifyProof method from context to call our edge function
       const isValid = await verifyProof(parsedProof);
       
       setVerificationResult({
         valid: isValid,
-        details: isValid ? parsedProof : null,
+        details: isValid ? {
+          ...parsedProof,
+          verifiedAt: new Date().toISOString()
+        } : null,
       });
       
       toast({
         title: isValid ? "Proof Valid" : "Proof Invalid",
         description: isValid 
-          ? "The proof has been successfully verified" 
+          ? "The proof has been successfully verified with Self Protocol" 
           : "The proof is invalid or tampered with",
         variant: isValid ? "default" : "destructive",
       });
@@ -75,7 +78,10 @@ const ProofVerifier = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Verify Self Proof</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-primary" />
+          Verify Self Proof
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -93,8 +99,9 @@ const ProofVerifier = () => {
           />
         </div>
         
-        <div className="bg-muted/50 p-3 rounded-md">
-          <p className="text-sm text-muted-foreground">
+        <div className="flex gap-2 items-center text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+          <FileJson className="h-4 w-4" />
+          <p>
             Enter a proof JSON received from a Self Protocol application to verify its authenticity and validity.
           </p>
         </div>
@@ -107,12 +114,12 @@ const ProofVerifier = () => {
               {verificationResult.valid ? (
                 <>
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="font-medium text-green-700">Proof Valid</span>
+                  <span className="font-medium text-green-700">Proof Verified Successfully</span>
                 </>
               ) : (
                 <>
                   <XCircle className="h-5 w-5 text-red-500" />
-                  <span className="font-medium text-red-700">Proof Invalid</span>
+                  <span className="font-medium text-red-700">Proof Verification Failed</span>
                 </>
               )}
             </div>
@@ -120,7 +127,7 @@ const ProofVerifier = () => {
             {verificationResult.valid && verificationResult.details && (
               <div className="mt-2">
                 <h4 className="text-sm font-medium mb-1">Proof Details</h4>
-                <pre className="text-xs p-2 bg-background rounded-sm overflow-auto">
+                <pre className="text-xs p-2 bg-background rounded-sm overflow-auto max-h-48">
                   {JSON.stringify(verificationResult.details, null, 2)}
                 </pre>
               </div>
@@ -136,10 +143,12 @@ const ProofVerifier = () => {
         >
           {loading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying with Self Protocol...
             </>
           ) : (
-            "Verify Proof"
+            <>
+              <ShieldCheck className="mr-2 h-4 w-4" /> Verify Proof
+            </>
           )}
         </Button>
       </CardFooter>
