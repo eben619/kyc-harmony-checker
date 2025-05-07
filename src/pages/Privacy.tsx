@@ -7,7 +7,7 @@ import ProofGenerator from '@/components/self/ProofGenerator';
 import ProofVerifier from '@/components/self/ProofVerifier';
 import { useLocation } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Lock, ShieldCheck } from 'lucide-react';
 
 const Privacy = () => {
   const location = useLocation();
@@ -33,45 +33,64 @@ const Privacy = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Privacy & Proofs</h1>
-      
-      <SelfProviderWrapper>
-        <div className="grid gap-6">
-          {verificationStatus?.verified && (
-            <Alert className="bg-green-50 border-green-200">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertTitle>Verification Complete</AlertTitle>
-              <AlertDescription>
-                Your {verificationStatus.type} proof has been successfully created with Self Protocol.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          <SelfConnect />
-          
-          <Tabs defaultValue="generate" className="w-full">
-            <TabsList className="grid grid-cols-2 w-full">
-              <TabsTrigger value="generate">Generate Proofs</TabsTrigger>
-              <TabsTrigger value="verify">Verify Proofs</TabsTrigger>
-            </TabsList>
-            <TabsContent value="generate" className="mt-4">
-              <ProofGenerator />
-            </TabsContent>
-            <TabsContent value="verify" className="mt-4">
-              <ProofVerifier />
-            </TabsContent>
-          </Tabs>
-          
-          <div className="bg-muted p-4 rounded-lg">
-            <h3 className="font-medium mb-2">About Zero-Knowledge Proofs</h3>
-            <p className="text-sm text-muted-foreground">
-              Zero-knowledge proofs allow you to prove certain information without revealing the underlying data.
-              For example, you can prove you're over 18 without revealing your actual birth date.
-              Self Protocol makes this cryptographic technology accessible and easy to use.
-            </p>
-          </div>
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="text-2xl font-bold mb-2 flex items-center">
+            <Lock className="mr-2 h-5 w-5" />
+            Self Protocol Identity & Proofs
+          </h1>
+          <p className="text-muted-foreground">
+            Manage your decentralized identity and create zero-knowledge proofs with Self Protocol
+          </p>
         </div>
-      </SelfProviderWrapper>
+        
+        <SelfProviderWrapper>
+          <div className="grid gap-6">
+            {verificationStatus?.verified && (
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertTitle>Verification Complete</AlertTitle>
+                <AlertDescription>
+                  Your {verificationStatus.type} proof has been successfully created with Self Protocol.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <div className="grid md:grid-cols-[350px_1fr] gap-6">
+              <div>
+                <SelfConnect />
+              </div>
+              
+              <div>
+                <Tabs defaultValue="generate" className="w-full">
+                  <div className="mb-4 bg-muted/30 p-4 rounded-lg">
+                    <h2 className="text-lg font-medium mb-2 flex items-center">
+                      <ShieldCheck className="mr-2 h-5 w-5 text-primary" />
+                      Self Protocol Zero-Knowledge Proofs
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Zero-knowledge proofs allow you to prove certain information without revealing the underlying data.
+                      The Self Protocol implementation uses SelfCircuitLibrary, CircuitAttributeHandler, and VcAndDiscloseCircuitVerifier
+                      to create cryptographic proofs that protect your privacy.
+                    </p>
+                  </div>
+                  
+                  <TabsList className="grid grid-cols-2 w-full">
+                    <TabsTrigger value="generate">Generate Proofs</TabsTrigger>
+                    <TabsTrigger value="verify">Verify Proofs</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="generate" className="mt-4">
+                    <ProofGenerator />
+                  </TabsContent>
+                  <TabsContent value="verify" className="mt-4">
+                    <ProofVerifier />
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+          </div>
+        </SelfProviderWrapper>
+      </div>
     </div>
   );
 };

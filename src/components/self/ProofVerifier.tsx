@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useSelf } from '@/contexts/SelfContext';
 import { useToast } from '@/components/ui/use-toast';
-import { CheckCircle, FileJson, FileText, Loader2, ShieldCheck, XCircle } from 'lucide-react';
+import { CheckCircle, FileJson, Loader2, ShieldCheck, XCircle } from 'lucide-react';
 
 const ProofVerifier = () => {
   const { isConnected, verifyProof } = useSelf();
@@ -75,15 +75,31 @@ const ProofVerifier = () => {
     }
   };
 
+  // Sample proof for easy testing
+  const insertSampleProof = () => {
+    const sampleProof = {
+      id: "proof-a1b2c3d4",
+      type: "identity",
+      issuer: "did:self:0x1234567890abcdef",
+      issuedAt: new Date().toISOString(),
+      attributes: {
+        documentType: "passport",
+        name: "verified",
+        nationality: "verified"
+      }
+    };
+    setProofInput(JSON.stringify(sampleProof, null, 2));
+  };
+
   return (
-    <Card>
-      <CardHeader>
+    <Card className="border-2 border-primary/10 shadow-md">
+      <CardHeader className="bg-primary/5">
         <CardTitle className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-primary" />
           Verify Self Proof
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-6">
         <div className="space-y-2">
           <label htmlFor="proofInput" className="block text-sm font-medium">
             Proof Data
@@ -97,12 +113,25 @@ const ProofVerifier = () => {
             disabled={loading}
             className="font-mono text-sm"
           />
+          <div className="text-right">
+            <Button 
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={insertSampleProof}
+              className="text-xs"
+              disabled={loading}
+            >
+              Insert Sample
+            </Button>
+          </div>
         </div>
         
         <div className="flex gap-2 items-center text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-          <FileJson className="h-4 w-4" />
+          <FileJson className="h-4 w-4 shrink-0" />
           <p>
             Enter a proof JSON received from a Self Protocol application to verify its authenticity and validity.
+            The verification uses SelfVerificationRoot and CircuitAttributeHandler libraries.
           </p>
         </div>
         
