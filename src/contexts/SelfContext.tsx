@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAddress } from '@thirdweb-dev/react';
 import { getUniversalLink, SelfAppBuilder } from '@selfxyz/core';
@@ -160,11 +161,11 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
       
       const config = proofConfig[proofType as keyof typeof proofConfig] || proofConfig.identity;
       
-      // Generate universal link for deeplink into Self app - removed the 'fact' property
+      // Generate universal link for deeplink into Self app
+      // Modify this call to remove the 'reason' property that is causing the error
       const universalLink = getUniversalLink({
         appName: "KYC Harmony",
         scope: config.scope,
-        reason: config.reason,
         callbackUrl: `${window.location.origin}/privacy?verified=true&type=${proofType}`,
       });
       
