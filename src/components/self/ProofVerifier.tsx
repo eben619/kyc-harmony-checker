@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useSelf } from '@/contexts/SelfContext';
 import { useToast } from '@/components/ui/use-toast';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, Loader2, XCircle } from 'lucide-react';
 
 const ProofVerifier = () => {
-  const { isConnected } = useSelf();
+  const { isConnected, verifyProof } = useSelf();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [proofInput, setProofInput] = useState('');
@@ -42,11 +42,8 @@ const ProofVerifier = () => {
       // Parse the input proof
       const parsedProof = JSON.parse(proofInput);
       
-      // Simulate verification with a delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Simple validation - in a real app this would check signatures, etc.
-      const isValid = parsedProof && parsedProof.id && parsedProof.issuer;
+      // Use the verifyProof method from context
+      const isValid = await verifyProof(parsedProof);
       
       setVerificationResult({
         valid: isValid,
@@ -96,6 +93,12 @@ const ProofVerifier = () => {
           />
         </div>
         
+        <div className="bg-muted/50 p-3 rounded-md">
+          <p className="text-sm text-muted-foreground">
+            Enter a proof JSON received from a Self Protocol application to verify its authenticity and validity.
+          </p>
+        </div>
+        
         {verificationResult !== null && (
           <div className={`p-4 rounded-md ${
             verificationResult.valid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
@@ -131,7 +134,13 @@ const ProofVerifier = () => {
           disabled={loading || !isConnected || !proofInput}
           className="w-full"
         >
-          {loading ? "Verifying..." : "Verify Proof"}
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying...
+            </>
+          ) : (
+            "Verify Proof"
+          )}
         </Button>
       </CardFooter>
     </Card>

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useSelf } from '@/contexts/SelfContext';
 import { useAddress } from '@thirdweb-dev/react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { Check, XCircle } from 'lucide-react';
+import { Check, ExternalLink, QrCode, XCircle } from 'lucide-react';
 
 const SelfConnect = () => {
   const { selfID, isConnected, connect, disconnect, loading, error } = useSelf();
@@ -13,7 +13,12 @@ const SelfConnect = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Self Protocol Connection</CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          <span>Self Protocol Connection</span>
+          {isConnected && (
+            <QrCode className="h-5 w-5 text-green-500" />
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -33,13 +38,21 @@ const SelfConnect = () => {
           </div>
           
           {selfID && (
-            <div>
-              <span className="font-medium">DID:</span> <span className="font-mono text-xs">{selfID.id}</span>
+            <div className="bg-muted p-2 rounded-md">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">DID:</span>
+                <span className="font-mono text-xs truncate max-w-[220px]">{selfID.id}</span>
+              </div>
+              <div className="text-xs text-muted-foreground mt-2">
+                Your decentralized identity is securely connected
+              </div>
             </div>
           )}
           
           {error && (
-            <div className="text-destructive text-sm">{error}</div>
+            <div className="text-destructive text-sm bg-destructive/10 p-2 rounded-md">
+              {error}
+            </div>
           )}
         </div>
       </CardContent>
@@ -50,7 +63,12 @@ const SelfConnect = () => {
             disabled={!address || loading}
             className="w-full"
           >
-            {loading ? "Connecting..." : "Connect Self Protocol"}
+            {loading ? "Connecting..." : (
+              <>
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Connect Self Protocol
+              </>
+            )}
           </Button>
         ) : (
           <Button 

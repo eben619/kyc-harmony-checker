@@ -9,7 +9,11 @@ export const useDocumentUpload = (
   updateFormData: (data: Partial<KYCData>) => void
 ) => {
   const [documentType, setDocumentType] = useState<string>(formData.documentType || "");
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerifying, setIsVerifying] = useState({
+    front: false,
+    back: false,
+    passport: false
+  });
   const { toast } = useToast();
 
   const canProceed = () => {
@@ -37,7 +41,8 @@ export const useDocumentUpload = (
     }
 
     try {
-      setIsVerifying(true);
+      // Set loading state for the specific side being uploaded
+      setIsVerifying(prev => ({ ...prev, [side]: true }));
 
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
@@ -50,7 +55,7 @@ export const useDocumentUpload = (
 
       // Create folder path with user ID
       const folderPath = `${user.id}/`;
-      const fileName = `${folderPath}${Date.now()}-${file.name}`;
+      const fileName = `${folderPath}${side}-${Date.now()}-${file.name}`;
 
       const { error: uploadError, data } = await supabase.storage
         .from('kyc_documents')
@@ -65,7 +70,7 @@ export const useDocumentUpload = (
       }
 
       // Update form data based on document type and side
-      if (side === 'passport' || documentType === 'passport') {
+      if (side === 'passport') {
         updateFormData({ 
           documentImagePath: fileName,
           documentType: 'passport'
@@ -88,7 +93,7 @@ export const useDocumentUpload = (
       });
 
       console.log('File uploaded successfully:', fileName);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
       toast({
         title: "Error",
@@ -96,7 +101,7 @@ export const useDocumentUpload = (
         variant: "destructive",
       });
     } finally {
-      setIsVerifying(false);
+      setIsVerifying(prev => ({ ...prev, [side]: false }));
     }
   };
 

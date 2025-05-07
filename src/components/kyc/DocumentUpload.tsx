@@ -49,7 +49,7 @@ const DocumentUpload = ({
                   id="passportUpload"
                   label="Upload passport photo"
                   fileName={formData.documentImagePath}
-                  disabled={isVerifying}
+                  disabled={isVerifying.passport}
                   onChange={(e) => handleFileChange(e, 'passport')}
                 />
               ) : (
@@ -58,14 +58,14 @@ const DocumentUpload = ({
                     id="frontUpload"
                     label="Upload front side"
                     fileName={formData.documentFrontImagePath}
-                    disabled={isVerifying}
+                    disabled={isVerifying.front}
                     onChange={(e) => handleFileChange(e, 'front')}
                   />
                   <SingleDocumentUpload
                     id="backUpload"
                     label="Upload back side"
                     fileName={formData.documentBackImagePath}
-                    disabled={isVerifying}
+                    disabled={isVerifying.back}
                     onChange={(e) => handleFileChange(e, 'back')}
                   />
                 </div>
@@ -81,9 +81,9 @@ const DocumentUpload = ({
         </Button>
         <Button
           onClick={onNext}
-          disabled={!documentType || !canProceed() || isVerifying}
+          disabled={!documentType || !canProceed() || isVerifying.front || isVerifying.back || isVerifying.passport}
         >
-          {isVerifying ? "Verifying..." : "Next Step"}
+          {isVerifying.front || isVerifying.back || isVerifying.passport ? "Verifying..." : "Next Step"}
         </Button>
       </div>
     </div>
