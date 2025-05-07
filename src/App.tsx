@@ -18,7 +18,6 @@ import DocumentUploadForm from "./pages/kyc/DocumentUploadForm";
 import BiometricVerificationForm from "./pages/kyc/BiometricVerificationForm";
 import ReviewForm from "./pages/kyc/ReviewForm";
 import { useEffect, useState } from "react";
-import { NotificationsProvider } from "./contexts/NotificationsContext";
 
 const queryClient = new QueryClient();
 

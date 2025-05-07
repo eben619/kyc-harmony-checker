@@ -51,7 +51,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     }
     
     if (data) {
-      setNotifications(data);
+      setNotifications(data as Notification[]);
       setUnreadCount(data.filter(n => !n.read).length);
     }
   };
@@ -144,7 +144,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     }
     
     if (data && data.length > 0) {
-      setNotifications(prev => [data[0], ...prev]);
+      setNotifications(prev => [data[0] as Notification, ...prev]);
       setUnreadCount(prev => prev + 1);
       
       // Show toast for new notification

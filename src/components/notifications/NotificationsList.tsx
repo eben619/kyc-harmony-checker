@@ -9,7 +9,6 @@ import {
   Bell, 
   User,
   Check,
-  X,
   Trash
 } from "lucide-react";
 import { cn } from '@/lib/utils';

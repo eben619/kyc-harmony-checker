@@ -197,7 +197,6 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
       const config = proofConfig[proofType as keyof typeof proofConfig] || proofConfig.identity;
       
       // Generate universal link for deeplink into Self app
-      // Modify this call to remove the properties that are causing errors
       const universalLink = getUniversalLink({
         appName: "KYC Harmony",
         scope: config.scope
