@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { KYCData } from "../KYCForm";
 import SingleDocumentUpload from "./document-upload/SingleDocumentUpload";
@@ -49,7 +50,7 @@ const DocumentUpload = ({
                   label="Upload passport photo"
                   fileName={formData.documentImagePath}
                   disabled={isVerifying}
-                  onChange={(e) => handleFileChange(e)}
+                  onChange={(e) => handleFileChange(e, 'passport')}
                 />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

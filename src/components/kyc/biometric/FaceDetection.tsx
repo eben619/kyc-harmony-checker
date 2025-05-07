@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 
@@ -10,6 +11,8 @@ interface FaceDetectionProps {
 const FaceDetection = ({ videoRef, onFaceDetected, onHeadTurn }: FaceDetectionProps) => {
   const [detector, setDetector] = useState<FaceLandmarker | null>(null);
   const [lastXPosition, setLastXPosition] = useState<number | null>(null);
+  const [xPositions, setXPositions] = useState<number[]>([]);
+  const [headMovementDetected, setHeadMovementDetected] = useState(false);
 
   useEffect(() => {
     const initializeDetector = async () => {
@@ -57,14 +60,34 @@ const FaceDetection = ({ videoRef, onFaceDetected, onHeadTurn }: FaceDetectionPr
 
           if (facePresent) {
             // Calculate the average x position of face landmarks
-            const xPositions = results.faceLandmarks[0].map(landmark => landmark.x);
-            const avgX = xPositions.reduce((a, b) => a + b, 0) / xPositions.length;
+            const currentXPositions = results.faceLandmarks[0].map(landmark => landmark.x);
+            const avgX = currentXPositions.reduce((a, b) => a + b, 0) / currentXPositions.length;
+
+            // Store historical positions for movement analysis
+            setXPositions(prev => {
+              const newPositions = [...prev, avgX].slice(-10); // Keep last 10 positions
+              return newPositions;
+            });
+
+            // Detect head turn by analyzing position history
+            if (xPositions.length >= 5) {
+              const minX = Math.min(...xPositions);
+              const maxX = Math.max(...xPositions);
+              const movementRange = maxX - minX;
+              
+              // Significant horizontal movement detected
+              if (movementRange > 0.15) { // 15% movement threshold
+                setHeadMovementDetected(true);
+                onHeadTurn(true);
+                console.log("Head movement detected:", movementRange);
+              }
+            }
 
             if (lastXPosition !== null) {
               const movement = Math.abs(avgX - lastXPosition);
-              // Detect significant horizontal movement (threshold can be adjusted)
-              if (movement > 0.15) { // 15% movement threshold
-                onHeadTurn(true);
+              // Log significant movements
+              if (movement > 0.05) {
+                console.log("Movement detected:", movement);
               }
             }
             setLastXPosition(avgX);
@@ -85,7 +108,7 @@ const FaceDetection = ({ videoRef, onFaceDetected, onHeadTurn }: FaceDetectionPr
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [detector, videoRef, onFaceDetected, onHeadTurn, lastXPosition]);
+  }, [detector, videoRef, onFaceDetected, onHeadTurn, lastXPosition, xPositions]);
 
   return null;
 };

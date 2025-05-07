@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { KYCData } from "../../KYCForm";
 import { useToast } from "@/components/ui/use-toast";
@@ -23,7 +24,7 @@ export const useDocumentUpload = (
 
   const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    side?: 'front' | 'back'
+    side: 'front' | 'back' | 'passport' = 'passport'
   ) => {
     const file = e.target.files?.[0];
     if (!file) {
@@ -63,29 +64,27 @@ export const useDocumentUpload = (
         throw uploadError;
       }
 
-      // Update form data based on document type with file paths
-      if (documentType === 'passport') {
+      // Update form data based on document type and side
+      if (side === 'passport' || documentType === 'passport') {
         updateFormData({ 
           documentImagePath: fileName,
           documentType: 'passport'
         });
-      } else {
-        if (side === 'front') {
-          updateFormData({ 
-            documentFrontImagePath: fileName,
-            documentType
-          });
-        } else if (side === 'back') {
-          updateFormData({ 
-            documentBackImagePath: fileName,
-            documentType
-          });
-        }
+      } else if (side === 'front') {
+        updateFormData({ 
+          documentFrontImagePath: fileName,
+          documentType
+        });
+      } else if (side === 'back') {
+        updateFormData({ 
+          documentBackImagePath: fileName,
+          documentType
+        });
       }
 
       toast({
         title: "Success",
-        description: "Document uploaded successfully",
+        description: `Document ${side} uploaded successfully`,
       });
 
       console.log('File uploaded successfully:', fileName);

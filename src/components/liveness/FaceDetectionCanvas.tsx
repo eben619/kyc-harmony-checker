@@ -1,10 +1,11 @@
-import React, { useRef, useEffect } from 'react';
+
+import React, { useRef, useEffect, useState } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import * as faceDetection from '@tensorflow-models/face-detection';
 
 interface FaceDetectionCanvasProps {
   videoRef: React.RefObject<HTMLVideoElement>;
-  onFaceDetected: (detected: boolean) => void;
+  onFaceDetected: (detected: boolean, data?: any) => void;
 }
 
 interface DetectorConfig {
@@ -15,6 +16,8 @@ interface DetectorConfig {
 
 const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [xPositions, setXPositions] = useState<number[]>([]);
+  const [headTurnDetected, setHeadTurnDetected] = useState(false);
 
   useEffect(() => {
     let detector: faceDetection.FaceDetector | null = null;
@@ -54,22 +57,55 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
         // Detect faces
         const faces = await detector.estimateFaces(videoRef.current);
         const faceDetected = faces.length > 0;
-        onFaceDetected(faceDetected);
-
-        // Draw detection boxes
+        
         if (faceDetected) {
-          faces.forEach((face) => {
-            const box = face.box;
-            context.strokeStyle = '#00ff00';
-            context.lineWidth = 2;
-            context.strokeRect(
-              box.xMin,
-              box.yMin,
-              box.width,
-              box.height
-            );
+          const face = faces[0];
+          const box = face.box;
+          
+          // Calculate face center x position (normalized 0-1)
+          const faceCenterX = (box.xMin + box.width / 2) / videoRef.current.videoWidth;
+          
+          // Track face center positions
+          setXPositions(prev => {
+            const newPositions = [...prev, faceCenterX].slice(-15); // Keep last 15 positions
+            return newPositions;
           });
+          
+          // Detect head turn by analyzing position history
+          if (xPositions.length >= 10) {
+            const minX = Math.min(...xPositions);
+            const maxX = Math.max(...xPositions);
+            const movementRange = maxX - minX;
+            
+            // Significant horizontal movement detected
+            if (movementRange > 0.15 && !headTurnDetected) { // 15% movement threshold
+              console.log("Head turn detected! Movement range:", movementRange);
+              setHeadTurnDetected(true);
+            }
+          }
+
+          // Draw detection boxes
+          context.strokeStyle = headTurnDetected ? '#00ff00' : '#ffff00';
+          context.lineWidth = 2;
+          context.strokeRect(
+            box.xMin,
+            box.yMin,
+            box.width,
+            box.height
+          );
+          
+          // Add labels
+          context.fillStyle = headTurnDetected ? '#00ff00' : '#ffff00';
+          context.font = '16px Arial';
+          context.fillText(
+            headTurnDetected ? 'Head Turn ✓' : 'Face Detected',
+            box.xMin,
+            box.yMin - 10
+          );
         }
+        
+        // Pass both face detection and head turn status
+        onFaceDetected(faceDetected, { headTurned: headTurnDetected });
 
       } catch (error) {
         console.error('Face detection error:', error);
@@ -93,7 +129,27 @@ const FaceDetectionCanvas = ({ videoRef, onFaceDetected }: FaceDetectionCanvasPr
         tf.dispose();
       }
     };
-  }, [videoRef, onFaceDetected]);
+  }, [videoRef, onFaceDetected, xPositions, headTurnDetected]);
+
+  useEffect(() => {
+    // Update canvas dimensions when video dimensions change
+    const updateCanvasDimensions = () => {
+      if (canvasRef.current && videoRef.current) {
+        canvasRef.current.width = videoRef.current.videoWidth;
+        canvasRef.current.height = videoRef.current.videoHeight;
+      }
+    };
+
+    if (videoRef.current) {
+      videoRef.current.addEventListener('loadedmetadata', updateCanvasDimensions);
+    }
+
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.removeEventListener('loadedmetadata', updateCanvasDimensions);
+      }
+    };
+  }, [videoRef]);
 
   return (
     <canvas
