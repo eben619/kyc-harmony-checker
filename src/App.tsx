@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +18,7 @@ import DocumentUploadForm from "./pages/kyc/DocumentUploadForm";
 import BiometricVerificationForm from "./pages/kyc/BiometricVerificationForm";
 import ReviewForm from "./pages/kyc/ReviewForm";
 import { useEffect, useState } from "react";
+import { NotificationsProvider } from "./contexts/NotificationsContext";
 
 const queryClient = new QueryClient();
 

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { LivenessDetection } from './LivenessDetection';
 import { supabase } from '@/integrations/supabase/client';
+import { useNotifications } from '@/contexts/NotificationsContext';
 
 export function KYCVerification() {
   const address = useAddress();
@@ -15,6 +16,7 @@ export function KYCVerification() {
   const [userId, setUserId] = useState<string | null>(null);
   const [verificationComplete, setVerificationComplete] = useState(false);
   const [isWalletBound, setIsWalletBound] = useState(false);
+  const { addNotification } = useNotifications();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -64,11 +66,30 @@ export function KYCVerification() {
         title: "Success",
         description: "Wallet successfully bound to your account",
       });
+
+      // Add notification for successful wallet binding
+      addNotification({
+        title: "Wallet Bound Successfully",
+        message: `Your wallet address ${address.substring(0, 6)}...${address.substring(address.length - 4)} is now bound to your account.`,
+        type: "success",
+        category: "kyc",
+        action_url: "/account"
+      });
+
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to bind wallet. Please try again.",
         variant: "destructive"
+      });
+
+      // Add notification for failed wallet binding
+      addNotification({
+        title: "Wallet Binding Failed",
+        message: "There was an error binding your wallet to your account. Please try again.",
+        type: "error",
+        category: "kyc",
+        action_url: "/account"
       });
     }
   };
@@ -78,6 +99,15 @@ export function KYCVerification() {
     toast({
       title: "Success",
       description: "Liveness verification completed successfully!",
+    });
+
+    // Add notification for successful liveness verification
+    addNotification({
+      title: "KYC Verification Completed",
+      message: "Your liveness verification has been completed successfully. Your identity is being verified.",
+      type: "success",
+      category: "kyc",
+      action_url: "/kyc"
     });
   };
 

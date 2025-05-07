@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useAddress } from '@thirdweb-dev/react';
 import { getUniversalLink, SelfAppBuilder } from '@selfxyz/core';
 import { supabase } from "@/integrations/supabase/client";
+import { useNotifications } from './NotificationsContext';
 
 // Define interface for SelfID
 interface SelfID {
@@ -42,6 +43,7 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const [selfApp, setSelfApp] = useState<any>(null);
   const walletAddress = useAddress();
+  const { addNotification } = useNotifications?.() || { addNotification: undefined };
 
   // Initialize Self App
   useEffect(() => {
@@ -117,9 +119,31 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
       setIsConnected(true);
       console.log("Connected to Self Protocol", selfIDData);
       
+      // Add notification for successful connection
+      if (addNotification) {
+        addNotification({
+          title: "Self Protocol Connected",
+          message: "Your identity has been verified with Self Protocol",
+          type: "success",
+          category: "self",
+          action_url: "/privacy"
+        });
+      }
+      
     } catch (err: any) {
       console.error("Error connecting to Self ID:", err);
       setError(err.message || "Failed to connect to Self ID");
+      
+      // Add notification for failed connection
+      if (addNotification) {
+        addNotification({
+          title: "Self Protocol Connection Failed",
+          message: err.message || "Failed to connect to Self Protocol",
+          type: "error",
+          category: "self",
+          action_url: "/privacy"
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -132,6 +156,17 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
     setSelfID(null);
     setIsConnected(false);
     console.log("Disconnected from Self Protocol");
+    
+    // Add notification for disconnection
+    if (addNotification) {
+      addNotification({
+        title: "Self Protocol Disconnected",
+        message: "You have been disconnected from Self Protocol",
+        type: "info",
+        category: "self",
+        action_url: "/privacy"
+      });
+    }
   };
 
   // Generate deep link for creating proofs
@@ -162,11 +197,10 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
       const config = proofConfig[proofType as keyof typeof proofConfig] || proofConfig.identity;
       
       // Generate universal link for deeplink into Self app
-      // Modify this call to remove the 'reason' property that is causing the error
+      // Modify this call to remove the properties that are causing errors
       const universalLink = getUniversalLink({
         appName: "KYC Harmony",
-        scope: config.scope,
-        callbackUrl: `${window.location.origin}/privacy?verified=true&type=${proofType}`,
+        scope: config.scope
       });
       
       console.log("Generated proof link:", universalLink);
@@ -189,10 +223,33 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
       
       if (error) {
         console.error("Error calling verification edge function:", error);
+        
+        // Add notification for verification failure
+        if (addNotification) {
+          addNotification({
+            title: "Proof Verification Failed",
+            message: "Could not verify your Self Protocol proof",
+            type: "error",
+            category: "self",
+            action_url: "/privacy"
+          });
+        }
+        
         return false;
       }
       
       console.log("Verification result:", data);
+      
+      // Add notification for successful verification
+      if (data?.valid && addNotification) {
+        addNotification({
+          title: "Proof Verified Successfully",
+          message: "Your Self Protocol proof has been verified",
+          type: "success",
+          category: "self",
+          action_url: "/privacy"
+        });
+      }
       
       // Return the verification result
       return data?.valid || false;

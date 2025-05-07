@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useUser } from "@supabase/auth-helpers-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -5,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { useNotifications } from "@/contexts/NotificationsContext";
 
 interface TaxFormSubmissionProps {
   formId: number;
@@ -16,6 +18,7 @@ const TaxFormSubmission = ({ formId, onCancel }: TaxFormSubmissionProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { addNotification } = useNotifications();
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -38,6 +41,15 @@ const TaxFormSubmission = ({ formId, onCancel }: TaxFormSubmissionProps) => {
         description: "We'll review your submission and get back to you.",
       });
 
+      // Add notification for tax form submission
+      addNotification({
+        title: "Tax Form Submitted",
+        message: "Your tax form has been submitted successfully and is under review.",
+        type: "success",
+        category: "tax",
+        action_url: "/tax"
+      });
+
       queryClient.invalidateQueries({ queryKey: ['userTaxForms'] });
       onCancel();
     } catch (error) {
@@ -46,6 +58,15 @@ const TaxFormSubmission = ({ formId, onCancel }: TaxFormSubmissionProps) => {
         title: "Error submitting tax form",
         description: "Please try again later.",
         variant: "destructive",
+      });
+
+      // Add notification for failed submission
+      addNotification({
+        title: "Tax Form Submission Failed",
+        message: "There was an error submitting your tax form. Please try again.",
+        type: "error",
+        category: "tax",
+        action_url: "/tax"
       });
     } finally {
       setIsSubmitting(false);

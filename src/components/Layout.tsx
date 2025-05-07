@@ -8,6 +8,8 @@ import AppSidebar from "./AppSidebar";
 import { ThirdwebProvider } from '@thirdweb-dev/react';
 import { Celo } from '@thirdweb-dev/chains';
 import { SelfProviderWrapper } from "@/contexts/SelfContext";
+import { NotificationsProvider } from "@/contexts/NotificationsContext";
+import NotificationBell from "./notifications/NotificationBell";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -29,29 +31,32 @@ const Layout = ({ children }: LayoutProps) => {
       supportedChains={[Celo]}
     >
       <SelfProviderWrapper>
-        <SidebarProvider>
-          <div className="min-h-screen flex w-full bg-background text-foreground">
-            <AppSidebar />
-            <main className="flex-1 p-6">
-              <div className="flex justify-between items-center mb-6">
-                <div className="md:hidden">
-                  <SidebarTrigger />
+        <NotificationsProvider>
+          <SidebarProvider>
+            <div className="min-h-screen flex w-full bg-background text-foreground">
+              <AppSidebar />
+              <main className="flex-1 p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="md:hidden">
+                    <SidebarTrigger />
+                  </div>
+                  <div className="ml-auto flex items-center gap-2">
+                    <NotificationBell />
+                    <Button
+                      variant="outline"
+                      onClick={handleLogout}
+                      className="flex items-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </Button>
+                  </div>
                 </div>
-                <div className="ml-auto">
-                  <Button
-                    variant="outline"
-                    onClick={handleLogout}
-                    className="flex items-center gap-2"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Logout
-                  </Button>
-                </div>
-              </div>
-              <div className="text-foreground">{children}</div>
-            </main>
-          </div>
-        </SidebarProvider>
+                <div className="text-foreground">{children}</div>
+              </main>
+            </div>
+          </SidebarProvider>
+        </NotificationsProvider>
       </SelfProviderWrapper>
     </ThirdwebProvider>
   );
