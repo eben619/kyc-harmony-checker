@@ -55,6 +55,12 @@ const SelfConnect = () => {
             </div>
           )}
         </div>
+        
+        <div className="bg-muted/50 p-3 rounded-md">
+          <p className="text-sm text-muted-foreground">
+            Self Protocol provides decentralized identity verification and zero-knowledge proofs for privacy
+          </p>
+        </div>
       </CardContent>
       <CardFooter>
         {!isConnected ? (

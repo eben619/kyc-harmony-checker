@@ -56,6 +56,10 @@ const InstructionsDisplay = ({
           ))}
         </div>
       </div>
+      
+      <div className="text-xs text-center text-gray-500">
+        {isStepComplete ? "Great job! Moving to next step..." : "Follow the current instruction carefully"}
+      </div>
     </div>
   );
 };
