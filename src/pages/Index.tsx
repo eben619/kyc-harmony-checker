@@ -1,6 +1,8 @@
-import Account from "./Account";
+
+import { Navigate } from "react-router-dom";
+
 const Index = () => {
-  return < Account/>;
+  return <Navigate to="/account" replace />;
 };
 
 export default Index;

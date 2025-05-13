@@ -64,115 +64,119 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <SessionContextProvider supabaseClient={supabase}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Account />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/account"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Account />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/kyc"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <PersonalInfoForm />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/kyc/document-upload"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <DocumentUploadForm />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/kyc/biometric"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <BiometricVerificationForm />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/kyc/review"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ReviewForm />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/privacy"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Privacy />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/notifications"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Notifications />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/tax"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Tax />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/language"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Language />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <NotificationsProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Account />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/account"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Account />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/kyc"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <PersonalInfoForm />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/kyc/document-upload"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <DocumentUploadForm />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/kyc/biometric"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <BiometricVerificationForm />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/kyc/review"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <ReviewForm />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/privacy"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Privacy />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <NotificationsProvider>
+                        <Notifications />
+                      </NotificationsProvider>
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tax"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Tax />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/language"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Language />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </NotificationsProvider>
     </SessionContextProvider>
   </QueryClientProvider>
 );
