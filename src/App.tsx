@@ -146,9 +146,7 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Layout>
-                      <NotificationsProvider>
-                        <Notifications />
-                      </NotificationsProvider>
+                      <Notifications />
                     </Layout>
                   </ProtectedRoute>
                 }
