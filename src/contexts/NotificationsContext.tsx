@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
+import { ToastAction } from "@/components/ui/toast";
 
 export interface Notification {
   id: string;
@@ -151,13 +152,16 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
       toast({
         title: notification.title,
         description: notification.message,
-        action: notification.action_url ? {
-          label: "View",
-          onClick: () => {
-            markAsRead(data[0].id);
-            navigate(notification.action_url as string);
-          }
-        } : undefined
+        action: notification.action_url ? (
+          <ToastAction 
+            onClick={() => {
+              markAsRead(data[0].id);
+              navigate(notification.action_url as string);
+            }}
+          >
+            View
+          </ToastAction>
+        ) : undefined
       });
     }
   };
@@ -195,13 +199,16 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
           toast({
             title: newNotification.title,
             description: newNotification.message,
-            action: newNotification.action_url ? {
-              label: "View",
-              onClick: () => {
-                markAsRead(newNotification.id);
-                navigate(newNotification.action_url as string);
-              }
-            } : undefined
+            action: newNotification.action_url ? (
+              <ToastAction 
+                onClick={() => {
+                  markAsRead(newNotification.id);
+                  navigate(newNotification.action_url as string);
+                }}
+              >
+                View
+              </ToastAction>
+            ) : undefined
           });
         }
       )

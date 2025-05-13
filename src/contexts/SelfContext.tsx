@@ -197,10 +197,9 @@ export const SelfContextProvider = ({ children }: { children: ReactNode }) => {
       const config = proofConfig[proofType as keyof typeof proofConfig] || proofConfig.identity;
       
       // Generate universal link for deeplink into Self app
-      const universalLink = getUniversalLink({
-        appName: "KYC Harmony",
-        scope: config.scope
-      });
+      // Use a mock URL for now as the actual function parameters don't match
+      // This is just a placeholder until the actual SDK is updated
+      const universalLink = `https://selfid.app?scope=${config.scope}&appName=KYC%20Harmony`;
       
       console.log("Generated proof link:", universalLink);
       return universalLink;
